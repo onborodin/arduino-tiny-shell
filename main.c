@@ -94,8 +94,8 @@ void pwm_init(void) {
 }
 
 ISR(TIMER2_OVF_vect) {
+/* Dummy code */
 }
-
 
 int16_t cmd_hello(void) {
     outl("Hello!");
