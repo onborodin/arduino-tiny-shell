@@ -9,6 +9,8 @@ Here I present sample arduino micro-application with
 
 Shell really is tiny and used only ~850 bytes of microcontroller code.
 
+Well, if in truth, I wrote this code for the toys of my youngest son =)
+
 We cann add own function call. The agreement about the called functions is very simple:
 - function must accept string arguments `uint8_t*`
 - and return an integer, now is `int16_t`
@@ -23,6 +25,11 @@ difficult to add your types. To do this, you need to write the translation
  functions that are called inside the command handler function.
 
 The argument delimiter is a space, the command terminator is a semicolon `;`.
+
+
+## Arduino screen
+
+![](http://wiki.unix7.org/_media/c/screenshot-2018-02-08-13-39-20.png)
 
 
 
