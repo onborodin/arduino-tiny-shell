@@ -4,8 +4,9 @@
 
 Here I present sample arduino micro-application with
 - ring buffer for input and output with hook to interrupts (wide shared ring buffer code with my adaptation and inmprovement)
-- expanded tiny sheel for command execution.
-- some data manipulation function 
+- extensible tiny sheel for command execution
+- some data manipulation function
+- PWM timers and interrupts sample
 
 Shell really is tiny and used only ~850 bytes of microcontroller code.
 
