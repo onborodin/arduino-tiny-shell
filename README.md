@@ -30,7 +30,7 @@ The argument delimiter is a space, the command terminator is a semicolon `;`.
 
 ## Arduino screen
 
-![](http://wiki.unix7.org/_media/c/screenshot-2018-02-08-13-39-20.png)
+![](https://wiki.unix7.org/_detail/c/screenshot-2018-02-12-09-58-27.png)
 
 
 
