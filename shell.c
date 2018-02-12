@@ -95,7 +95,7 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
         }
         if (r == 0) {
             outl("ERR COMMAND NOT FOUND");
-        } else if (r < 0){
+        } else if (r < 0) {
             printf("ERR %d", r);
             outl("");
         } else {
@@ -105,4 +105,5 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
         head = tail;
     }
 }
+
 //EOF

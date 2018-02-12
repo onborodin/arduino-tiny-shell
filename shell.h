@@ -15,7 +15,7 @@ typedef struct cmd {
     uint8_t argc;
 } cmd_t;
 
-typedef int16_t (*funcp_t) ();
+typedef int16_t(*funcp_t) ();
 
 typedef struct cdef {
     uint8_t *name;

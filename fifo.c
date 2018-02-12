@@ -33,6 +33,7 @@ void outl(uint8_t * str) {
     fifo_puts(out, "\r\n");
 }
 
+
 int uart_putchar(char c, FILE * stream) {
     return fifo_putc(&fifo_out, c);
 }
@@ -85,10 +86,20 @@ bool fifo_empty(const FIFO * b) {
 }
 
 uint8_t fifo_peek(const FIFO * b) {
-    if (b) {
-        return (b->buffer[b->tail % b->buffer_len]);
+    uint8_t data = 0;
+
+    if (!fifo_empty(b)) {
+        data = b->buffer[b->tail % b->buffer_len];
     }
-    return 0;
+    return data;
+}
+
+bool fifo_back(FIFO * b) {
+    if (!fifo_empty(b)) {
+        b->head--;
+        return true;
+    }
+    return false;
 }
 
 uint8_t fifo_getc(FIFO * b) {

@@ -30,6 +30,8 @@ uint8_t fifo_puts(FIFO * b, uint8_t * str);
 bool fifo_scanc(FIFO * b, uint8_t c);
 uint8_t fifo_gett(FIFO * b, uint8_t * str, uint8_t len, uint8_t);
 
+bool fifo_back(FIFO * b);
+
 void outc(uint8_t c);
 void outs(uint8_t * str);
 void outl(uint8_t * str);

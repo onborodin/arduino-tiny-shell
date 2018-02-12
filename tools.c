@@ -11,7 +11,7 @@ uint16_t str_len(uint8_t * str) {
     return i;
 }
 
-uint8_t* str_replc(uint8_t ** str, uint8_t c, uint8_t r) {
+uint8_t *str_replc(uint8_t ** str, uint8_t c, uint8_t r) {
     uint16_t i = 0;
     while ((*str)[i] != 0) {
         if ((*str)[i] == c)
@@ -62,8 +62,8 @@ int32_t str2int(uint8_t * str) {
     uint8_t i = l;
     int16_t n = 0;
     while (i > 0) {
-        if (str[i-1] <= '9' && str[i-1] >= '0')
-            n += (str[i-1] - '0') * int_pow(10, l - i);
+        if (str[i - 1] <= '9' && str[i - 1] >= '0')
+            n += (str[i - 1] - '0') * int_pow(10, l - i);
         i--;
     }
     if (str[0] == '-')

@@ -87,6 +87,7 @@ void pwm1_init(void) {
     OCR1B = 15;
 }
 
+
 void pwm2_init(void) {
     /* Timer 2 */
     TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM20) | (1 << WGM21);
@@ -133,7 +134,6 @@ ISR(USART_RX_vect) {
 
     fifo_putc(in, c);
     fifo_putc(out, c);
-
 }
 
 ISR(WDT_vect) {
@@ -146,10 +146,20 @@ ISR(WDT_vect) {
     WDTCSR = (1 << WDIE);
 }
 
+int16_t cmd_help(void) {
+    outl("Available commands:");
+    outl("[s3|s5|s6] pos - set servo position");
+    outl("help - this help");
+    return 1;
+}
+
+
 int16_t cmd_hello(void) {
     outl("Hello!");
     return 1;
 }
+
+
 
 int16_t cmd_serv3(uint8_t * arg) {
     int8_t i = str2int(arg);
@@ -194,6 +204,8 @@ int16_t cmd_delay(uint8_t * arg) {
 }
 
 cdef_t cdef[] = {
+    {"help", &cmd_help, 0}
+    ,
     {"hello", &cmd_hello, 0}
     ,
     {"s3", &cmd_serv3, 1}
@@ -223,6 +235,7 @@ int main() {
     adc_init();
     sei();
 
+    outl("\r\nTINY SHELL V01");
     outs(prompt);
 
     uint8_t str[STR_LEN];
