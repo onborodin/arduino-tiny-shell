@@ -51,12 +51,12 @@ void wdt_init(void) {
     WDTCSR = (1 << WDIE);
 }
 
-#define CLKD1    (1<<CS20)                      /* CLK/8 */
-#define CLKD8    (1<<CS21)                      /* CLK/8 */
-#define CLKD32   (1<<CS20) | (1<<CS21)          /* CLK/32 */
-#define CLKD64   (1<<CS22)                      /* CLK/64 */
-#define CLKD128  (1<<CS20) | (1<<CS22)          /* CLK/128 */
-#define CLKD256  (1<<CS21) | (1<<CS22)          /* CLK/256 */
+#define CLKD1    (1<<CS20)      /* CLK/8 */
+#define CLKD8    (1<<CS21)      /* CLK/8 */
+#define CLKD32   (1<<CS20) | (1<<CS21)  /* CLK/32 */
+#define CLKD64   (1<<CS22)      /* CLK/64 */
+#define CLKD128  (1<<CS20) | (1<<CS22)  /* CLK/128 */
+#define CLKD256  (1<<CS21) | (1<<CS22)  /* CLK/256 */
 #define CLKD1024 (1<<CS20) | (1<<CS21) | (1<<CS22)      /* CLK/1024 */
 
 void timer_init(void) {
@@ -72,8 +72,8 @@ void pwm0_init(void) {
     TCCR0B = CLKD128;
     DDRD |= (1 << PORTD5) | (1 << PORTD6);
 
-    OCR0A = 10;                 /* #6 */
-    OCR0B = 10;                 /* #5 */
+    OCR0A = 24;                 /* #6 */
+    OCR0B = 24;                 /* #5 */
 }
 
 void pwm1_init(void) {
@@ -83,8 +83,8 @@ void pwm1_init(void) {
     TCCR1B = (1 << WGM12) | (1 << CS10) | (1 << CS12);
     DDRB |= (1 << PORTB1) | (1 << PORTB2);
 
-    OCR1A = 15;
-    OCR1B = 15;
+    OCR1A = 24;
+    OCR1B = 24;
 }
 
 
@@ -95,26 +95,28 @@ void pwm2_init(void) {
     DDRB |= (1 << PORTB3);
     DDRD |= (1 << PORTD3);
 
-    OCR2A = 10;
-    OCR2B = 10;
+    OCR2A = 24;;
+    OCR2B = 24;;
 }
 
 void adc_init() {
     ADMUX |= (1 << REFS0);
-    ADCSRA = (1 << ADEN);                                  /* Enable ADC */
-    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);  /* Set base freq prescale */
+    ADCSRA = (1 << ADEN);       /* Enable ADC */
+    ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);       /* Set base freq prescale */
 }
 
 uint16_t adc_read(uint8_t ch) {
 
-    if (ch > 7)
+    if (ch > 6)
         return 0;
 
-    ADMUX = (ADMUX & 0xF0) | ch;        /* Channel selection */
-    ADCSRA |= (1 << ADSC);              /* Start conversion */
+    ch &= 0 b00000111;
+    ADMUX = (ADMUX & 0xf8) | ch;        /* Channel selection */
+    ADCSRA |= (1 << ADSC);      /* Start conversion */
 
-    while (!ADCSRA & (1 << ADIF));
-    ADCSRA |= (1 << ADIF);
+    //while (!ADCSRA & (1 << ADIF));
+    //ADCSRA |= (1 << ADIF);
+    while (ADCSRA & (1 << ADSC));
 
     return (ADC);
 }
@@ -148,47 +150,45 @@ ISR(WDT_vect) {
 
 int16_t cmd_help(void) {
     outl("Available commands:");
-    outl("[s3|s5|s6] pos - set servo position");
+    outl("[s3|s5|s6|s9|s10|s11] pos - set servo position");
     outl("help - this help");
     return 1;
 }
 
-
-int16_t cmd_hello(void) {
-    outl("Hello!");
-    return 1;
-}
-
-
-
 int16_t cmd_serv3(uint8_t * arg) {
     int8_t i = str2int(arg);
-    if (i >= 10 && i <= 37) {
-        OCR2B = i;
-        return i;
-    } else {
-        return -1;
-    }
+    OCR2B = i;
+    return i;
 }
 
 int16_t cmd_serv5(uint8_t * arg) {
     int8_t i = str2int(arg);
-    if (i >= 10 && i <= 37) {
-        OCR0B = i;
-        return i;
-    } else {
-        return -1;
-    }
+    OCR0B = i;
+    return i;
 }
 
 int16_t cmd_serv6(uint8_t * arg) {
     int8_t i = str2int(arg);
-    if (i >= 10 && i <= 37) {
-        OCR2A = i;
-        return i;
-    } else {
-        return -1;
-    }
+    OCR0A = i;
+    return i;
+}
+
+int16_t cmd_serv9(uint8_t * arg) {
+    int8_t i = str2int(arg);
+    OCR1A = i;
+    return i;
+}
+
+int16_t cmd_serv10(uint8_t * arg) {
+    int8_t i = str2int(arg);
+    OCR1B = i;
+    return i;
+}
+
+int16_t cmd_serv11(uint8_t * arg) {
+    int8_t i = str2int(arg);
+    OCR2A = i;
+    return i;
 }
 
 
@@ -204,22 +204,32 @@ int16_t cmd_delay(uint8_t * arg) {
 }
 
 cdef_t cdef[] = {
-    {"help", &cmd_help, 0}
+    {.name = "h",.func = &cmd_help,.argc = 0}
     ,
-    {"hello", &cmd_hello, 0}
+    {.name = "s3",.func = &cmd_serv3,.argc = 1}
     ,
-    {"s3", &cmd_serv3, 1}
+    {.name = "s5",.func = &cmd_serv5,.argc = 1}
     ,
-    {"s5", &cmd_serv5, 1}
+    {.name = "s6",.func = &cmd_serv6,.argc = 1}
     ,
-    {"s6", &cmd_serv6, 1}
+    {.name = "s9",.func = &cmd_serv9,.argc = 1}
     ,
-    {"delay", &cmd_delay, 1}
+    {.name = "s10",.func = &cmd_serv10,.argc = 1}
     ,
-    {"sleep", &cmd_delay, 1}
+    {.name = "s11",.func = &cmd_serv11,.argc = 1}
+    ,
+    {.name = "m1",.func = &cmd_serv3,.argc = 1}
+    ,
+    {.name = "m2",.func = &cmd_serv5,.argc = 1}
+    ,
+    {.name = "m3",.func = &cmd_serv6,.argc = 1}
+    ,
+    {.name = "m4",.func = &cmd_serv9,.argc = 1}
+    ,
+    {.name = "d",.func = &cmd_delay,.argc = 1}
 };
 
-#define STR_LEN 64
+#define STR_LEN 164
 
 uint8_t *prompt = "READY>";
 
@@ -256,4 +266,5 @@ int main() {
         }
         _delay_ms(100);
     }
+
 }

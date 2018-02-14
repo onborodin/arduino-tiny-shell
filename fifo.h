@@ -3,13 +3,13 @@
 #ifndef UART_H_IUI
 #define UART_H_IUI
 
-#define FIFO_BUFFER_SIZE 128
+#define FIFO_BUFFER_SIZE 164
 //extern static uint8_t inbuf[FIFO_BUFFER_SIZE];
 //extern static uint8_t outbuf[FIFO_BUFFER_SIZE];
 
 typedef struct fifo {
-    volatile unsigned head;
-    volatile unsigned tail;
+    volatile uint8_t head;
+    volatile uint8_t tail;
     volatile uint8_t *buffer;
     unsigned buffer_len;
 } FIFO;

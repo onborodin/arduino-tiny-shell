@@ -14,6 +14,7 @@ LDFLAGS= -s -Os -DF_CPU=16000000UL -mmcu=atmega328p
 
 main.elf: main.o fifo.o tools.o shell.o
 	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o
+	avr-size --format=berkeley $@
 
 %.o: %.c
 	avr-gcc $(CFLAGS) -c -o $@ $<
@@ -24,8 +25,11 @@ main.elf: main.o fifo.o tools.o shell.o
 %.hex: %.elf
 	avr-objcopy -O ihex -R .eeprom $< $@
 
-upload: main.hex
-	avrdude -qq -c arduino -p ATMEGA328P -P /dev/ttyU0 -b 115200 -U flash:w:main.hex
+
+%.upl: %.hex
+	avrdude -qq -c arduino -p ATMEGA328P -P /dev/ttyU0 -b 115200 -U flash:w:$<
+
+upload: main.upl
 
 backup:
 	avrdude -F -V -c arduino -p ATMEGA328P -P /dev/ttyU0 -b 115200 -U flash:r:backup.hex:i

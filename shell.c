@@ -8,6 +8,8 @@
 #include <shell.h>
 #include <fifo.h>
 
+
+
 bool gettseq(uint8_t ** headp, uint8_t ** tailp, uint8_t c, uint8_t t) {
     if ((*headp)[0] == 0)
         return false;
@@ -72,8 +74,10 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
         uint8_t i = 0, n = ccount, m = 0;
 
         int16_t r = 0;
+        bool s = false;
         while (i < n) {
             if (str_cmp(cdef[i].name, cmd.arg[0])) {
+                s = true;
                 if (cmd.argc < cdef[i].argc) {
                     outl("ERR NOT ENOUG ARGS");
                     break;
@@ -93,7 +97,7 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
             }
             i++;
         }
-        if (r == 0) {
+        if (!s) {
             outl("ERR COMMAND NOT FOUND");
         } else if (r < 0) {
             printf("ERR %d", r);
