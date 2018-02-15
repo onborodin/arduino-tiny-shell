@@ -97,14 +97,19 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
             }
             i++;
         }
+
+        uint8_t c[12];
+
         if (!s) {
             outl("ERR COMMAND NOT FOUND");
         } else if (r < 0) {
-            printf("ERR %d", r);
-            outl("");
+            int2str(r, c, sizeof(c), 10);
+            outs("ERR ");
+            outl(c);
         } else {
-            printf("OK %d", r);
-            outl("");
+            int2str(r, c, sizeof(c), 10);
+            outs("OK ");
+            outl(c);
         }
         head = tail;
     }

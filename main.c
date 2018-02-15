@@ -110,7 +110,7 @@ uint16_t adc_read(uint8_t ch) {
     if (ch > 6)
         return 0;
 
-    ch &= 0 b00000111;
+    ch &= 0b00000111;
     ADMUX = (ADMUX & 0xf8) | ch;        /* Channel selection */
     ADCSRA |= (1 << ADSC);      /* Start conversion */
 
