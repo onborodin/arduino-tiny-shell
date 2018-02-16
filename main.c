@@ -257,6 +257,7 @@ int main() {
 //    adc_init();
 
     i2c_init();
+    dc_init();
 
     sei();
 

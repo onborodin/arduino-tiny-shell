@@ -7,6 +7,7 @@
 #include <twim.h>
 #include <dc1307.h>
 
+
 uint8_t dc_write(uint8_t reg, uint8_t data) {
     if(i2c_start((DS1307_ADR << 1) | I2C_WRITE) == I2CDEV_FAIL) 
         return(0);
@@ -64,5 +65,17 @@ void dc_set_min(uint8_t num) {
 void dc_set_hour(uint8_t num) {
     uint8_t r = dc_write(0x02, dc_dec2bcd(num));
 }
+
+void dc_init(void) {
+    /* Start oscillator */
+    uint8_t r = dc_read(0x00);
+    r &= 0x7F;
+    dc_write(0x00, r);
+    /* Set 24h format */
+    r = dc_read(0x02);
+    r &= 0x5F;
+    dc_write(0x00, r);
+}
+
 
 /* EOF */

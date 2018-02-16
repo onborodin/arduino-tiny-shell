@@ -17,6 +17,8 @@ void dc_set_sec(uint8_t num);
 void dc_set_min(uint8_t num);
 void dc_set_hour(uint8_t num);
 
+void dc_init(void);
+
 
 #endif
 
