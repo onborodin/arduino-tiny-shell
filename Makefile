@@ -14,14 +14,13 @@ CFLAGS= -I. -Os -DF_CPU=16000000UL -mmcu=atmega328p
 #CFLAGS+= -ffunction-sections -fdata-sections
 LDFLAGS= -s -O0 -DF_CPU=16000000UL -mmcu=atmega328p
 
-main.elf: main.o fifo.o tools.o shell.o  twim.o dc1307.o
-	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o dc1307.o
+main.elf: main.o fifo.o tools.o shell.o  twim.o ds1307.o
+	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o
 	avr-size --format=berkeley $@
 
 roboarm.elf: roboarm.o 
 	avr-gcc $(LDFLAGS) -o $@ roboarm.o 
 	avr-size --format=berkeley $@
-
 
 %.o: %.c
 	avr-gcc $(CFLAGS) -c -o $@ $<

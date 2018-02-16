@@ -24,7 +24,7 @@
 #include <shell.h>
 
 #include <twim.h>
-#include <dc1307.h>
+#include <ds1307.h>
 
 void uart_init(void) {
     /* UBRR - USART Baud Rate Register */
@@ -257,7 +257,7 @@ int main() {
 //    adc_init();
 
     i2c_init();
-    dc_init();
+    ds_init();
 
     sei();
 
@@ -274,11 +274,11 @@ int main() {
         uint8_t d[12];
         uint16_t r;
 
-        outd(dc_get_hour());
+        outd(ds_get_hour());
         outs(":");
-        outd(dc_get_min());
+        outd(ds_get_min());
         outs(":");
-        outd(dc_get_sec());
+        outd(ds_get_sec());
         outnl();
 
         uint8_t *s;
