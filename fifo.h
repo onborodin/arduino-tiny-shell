@@ -35,6 +35,8 @@ bool fifo_back(FIFO * b);
 void outc(uint8_t c);
 void outs(uint8_t * str);
 void outl(uint8_t * str);
+void outd(uint16_t num);
+void outnl(void);
 
 
 #endif

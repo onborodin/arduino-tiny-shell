@@ -23,6 +23,8 @@
 #include <tools.h>
 #include <shell.h>
 
+#include <twim.h>
+#include <dc1307.h>
 
 void uart_init(void) {
     /* UBRR - USART Baud Rate Register */
@@ -151,7 +153,8 @@ ISR(WDT_vect) {
 int16_t cmd_help(void) {
     outl("Available commands:");
     outl("[s3|s5|s6|s9|s10|s11] pos - set servo position");
-    outl("help - this help");
+    outl("d n - delay n*0.1s");
+    outl("h - this help");
     return 1;
 }
 
@@ -229,6 +232,15 @@ cdef_t cdef[] = {
     {.name = "d",.func = &cmd_delay,.argc = 1}
 };
 
+
+
+#define SCL_CLOCK  100000L
+
+void rtc_init(void) {
+    TWSR = 0;                   /* no prescaler */
+    TWBR = ((F_CPU / SCL_CLOCK) - 16) / 2;      /* must be > 10 for stable operation */
+}
+
 #define STR_LEN 164
 
 uint8_t *prompt = "READY>";
@@ -238,11 +250,14 @@ int main() {
     fifo_iohook();
     uart_init();
     wdt_init();
-    timer_init();
-    pwm0_init();
-    pwm1_init();
-    pwm2_init();
-    adc_init();
+//    timer_init();
+//    pwm0_init();
+//    pwm1_init();
+//    pwm2_init();
+//    adc_init();
+
+    i2c_init();
+
     sei();
 
     outl("\r\nTINY SHELL V01");
@@ -251,9 +266,19 @@ int main() {
     uint8_t str[STR_LEN];
     memset(str, 0, STR_LEN);
 
-    _delay_ms(1000);
+    _delay_ms(100);
 
     while (1) {
+
+        uint8_t d[12];
+        uint16_t r;
+
+        outd(dc_get_hour());
+        outs(":");
+        outd(dc_get_min());
+        outs(":");
+        outd(dc_get_sec());
+        outnl();
 
         uint8_t *s;
         s = str;
@@ -264,7 +289,7 @@ int main() {
             outs(prompt);
 
         }
-        _delay_ms(100);
+        _delay_ms(1000);
     }
 
 }

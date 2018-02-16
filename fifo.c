@@ -33,6 +33,17 @@ void outl(uint8_t * str) {
     fifo_puts(out, "\r\n");
 }
 
+void outd(uint16_t num) {
+        uint8_t str[16];
+        int2str(num, str, sizeof(str), 10);
+        outs(str);
+}
+
+void outnl(void) {
+    fifo_puts(out, "\r\n");
+}
+
+
 
 int uart_putchar(char c, FILE * stream) {
     return fifo_putc(&fifo_out, c);
