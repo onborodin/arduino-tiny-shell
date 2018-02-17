@@ -71,17 +71,18 @@ void ds_set_hour(uint8_t num) {
 }
 
 #define DS_OSC  7
-
+#define DS_24H  6
 
 void ds_init(void) {
     /* Start oscillator */
-    uint8_t r = ds_read(DS_SEC);
-    r &= ~(1 << DS_OSC); //0x7F;
+    uint8_t r;
+    r  = ds_read(DS_SEC);
+    r &= ~(1 << DS_OSC);
     ds_write(DS_SEC, r);
 
     /* Set 24h format */
     r = ds_read(DS_HOUR);
-    r &= 0x5F;
+    r &= ~(1 << DS_24H);
     ds_write(DS_HOUR, r);
 }
 

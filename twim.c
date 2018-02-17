@@ -17,7 +17,7 @@
 #endif
 
 /* I2C clock in Hz */
-#define SCL_CLOCK  100000L
+#define SCL_CLOCK 100000L
 
 
 /*

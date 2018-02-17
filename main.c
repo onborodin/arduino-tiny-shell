@@ -26,6 +26,9 @@
 #include <twim.h>
 #include <ds1307.h>
 
+#define LCD_I2C_DEVICE  0x38
+#include <i2clcd.h>
+
 void uart_init(void) {
     /* UBRR - USART Baud Rate Register */
     UBRR0H = UBRRH_VALUE;
@@ -74,8 +77,8 @@ void pwm0_init(void) {
     TCCR0B = CLKD128;
     DDRD |= (1 << PORTD5) | (1 << PORTD6);
 
-    OCR0A = 24;                 /* #6 */
-    OCR0B = 24;                 /* #5 */
+    OCR0A = 24;         /* #6 */
+    OCR0B = 24;         /* #5 */
 }
 
 void pwm1_init(void) {
@@ -107,14 +110,15 @@ void adc_init() {
     ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);       /* Set base freq prescale */
 }
 
-uint16_t adc_read(uint8_t ch) {
+#define CHANNEL_MODE 0x07
 
+uint16_t adc_read(uint8_t ch) {
     if (ch > 6)
         return 0;
 
-    ch &= 0b00000111;
-    ADMUX = (ADMUX & 0xf8) | ch;        /* Channel selection */
-    ADCSRA |= (1 << ADSC);      /* Start conversion */
+    ch &= CHANNEL_MODE;
+    ADMUX = (ADMUX & 0xF8) | ch;        /* Channel selection */
+    ADCSRA |= (1 << ADSC);              /* Start conversion */
 
     //while (!ADCSRA & (1 << ADIF));
     //ADCSRA |= (1 << ADIF);
@@ -233,7 +237,6 @@ cdef_t cdef[] = {
 };
 
 
-
 #define SCL_CLOCK  100000L
 
 void rtc_init(void) {
@@ -245,19 +248,23 @@ void rtc_init(void) {
 
 uint8_t *prompt = "READY>";
 
+
 int main() {
 
     fifo_iohook();
     uart_init();
-    wdt_init();
-//    timer_init();
-//    pwm0_init();
-//    pwm1_init();
-//    pwm2_init();
-//    adc_init();
+    timer_init();
+    pwm0_init();
+    pwm1_init();
+    pwm2_init();
+    adc_init();
 
     i2c_init();
-    ds_init();
+    lcd_init();
+    wdt_init();
+
+    char string[] = "TINY SHELL V01";
+    lcd_print(string);
 
     sei();
 
@@ -271,6 +278,7 @@ int main() {
 
     while (1) {
 
+#if 0
         uint8_t d[12];
         uint16_t r;
 
@@ -280,7 +288,7 @@ int main() {
         outs(":");
         outd(ds_get_sec());
         outnl();
-
+#endif
         uint8_t *s;
         s = str;
         while (fifo_gett(in, str, STR_LEN, '\r') > 0) {
