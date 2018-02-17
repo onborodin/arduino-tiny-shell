@@ -14,6 +14,7 @@
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+#include <util/twi.h>
 
 
 #define BAUD 38400
@@ -52,7 +53,7 @@ void uart_init(void) {
 }
 
 void wdt_init(void) {
-    wdt_enable(WDTO_30MS);
+    wdt_enable(WDTO_250MS);
     WDTCSR = (1 << WDIE);
 }
 
@@ -210,9 +211,44 @@ int16_t cmd_delay(uint8_t * arg) {
     return n;
 }
 
+
+void twi_start(void) {
+    TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
+    while (!(TWCR & (1 << TWINT)));
+}
+
+void twi_stop(void) {
+    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);
+    while ((TWCR & (1 << TWSTO)));
+}
+
+void twi_write(uint8_t data) {
+    TWDR = data;
+    TWCR = (1 << TWINT) | (1 << TWEN);
+    while (!(TWCR & (1 << TWINT)));
+}
+
+uint16_t twi_scan(void) {
+    uint8_t addr = 1;
+    uint8_t str[4];
+    outnl();
+    while (addr < 127) {
+        twi_start();
+        twi_write(addr << 1);
+        if(TW_STATUS == TW_MT_SLA_ACK ) {
+            outs("0x");
+            int2str(addr, str, 3, 16);
+            outl(str);
+        }
+        twi_stop();
+        addr++;
+    }
+    return addr;
+}
+
+
 cdef_t cdef[] = {
-    {.name = "h",.func = &cmd_help,.argc = 0}
-    ,
+    {.name = "h",.func = &cmd_help,.argc = 0},
     {.name = "s3",.func = &cmd_serv3,.argc = 1}
     ,
     {.name = "s5",.func = &cmd_serv5,.argc = 1}
@@ -233,16 +269,10 @@ cdef_t cdef[] = {
     ,
     {.name = "m4",.func = &cmd_serv9,.argc = 1}
     ,
-    {.name = "d",.func = &cmd_delay,.argc = 1}
+    {.name = "d",.func = &cmd_delay,.argc = 1},
+    {.name = "ts",.func = &twi_scan,.argc = 0}
 };
 
-
-#define SCL_CLOCK  100000L
-
-void rtc_init(void) {
-    TWSR = 0;                   /* no prescaler */
-    TWBR = ((F_CPU / SCL_CLOCK) - 16) / 2;      /* must be > 10 for stable operation */
-}
 
 #define STR_LEN 164
 
@@ -263,10 +293,10 @@ int main() {
     lcd_init();
     wdt_init();
 
-    char string[] = "TINY SHELL V01";
-    lcd_print(string);
 
     sei();
+
+    _delay_ms(1000);
 
     outl("\r\nTINY SHELL V01");
     outs(prompt);
@@ -274,7 +304,9 @@ int main() {
     uint8_t str[STR_LEN];
     memset(str, 0, STR_LEN);
 
-    _delay_ms(100);
+    _delay_ms(1000);
+
+    //twi_scan();
 
     while (1) {
 
@@ -298,7 +330,7 @@ int main() {
             outs(prompt);
 
         }
-        _delay_ms(1000);
+        _delay_ms(10);
     }
 
 }
