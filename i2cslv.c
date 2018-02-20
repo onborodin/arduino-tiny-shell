@@ -3,6 +3,32 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+/*
+    Usage example, on master side.
+
+    Write to slave device:
+
+    #define SL_ADDR 0x43
+    uint8_t regaddr = 0x01;
+    uint8_t regdata = 0x78;
+    i2c_start_wait((SL_ADDR << 1) | I2C_WRITE);
+    data = i2c_write(regaddr);
+    data = i2c_write(regdata);
+    i2c_stop();
+
+    Read from slave:
+
+    #define SL_ADDR 0x43
+    uint8_t regdaddr = 0x01;
+    uint8_t regdata = 0;
+    i2c_start_wait((SL_ADDR << 1) | I2C_WRITE));
+    i2c_write(0x01);
+    i2c_rep_start((SL_ADDR << 1) | I2C_READ);
+    regdata = i2c_readNak();
+    i2c_stop();
+
+ */
+
 #define I2CSLAVE_ADDR 0x43
 
 #define PORT_DDR 0xB0         /* PORTB Settings */
@@ -19,19 +45,17 @@ volatile uint8_t state;
 #define ST_ADDR_RCVD    1
 #define ST_DATA_RCVD    2
 
-
 int8_t regdata_get(int8_t *regdata, uint8_t regdata_size, uint8_t addr) {
     if (addr < regdata_size) {
-        return regdata[addr];
+        return regdata[addr];  /* Direct mapping received address to array index */
     }
 }
 
 void regdata_put(int8_t *regdata, uint8_t regdata_size, uint8_t addr, int8_t data) {
     if (addr < regdata_size) {
-        regdata[addr] = data;
+        regdata[addr] = ++data; /* Some operation with received data, for example increment */
     }
 }
-
 
 
 ISR(TWI_vect) {
@@ -57,7 +81,7 @@ ISR(TWI_vect) {
                     break;
                 case ST_ADDR_RCVD:
                     data = TWDR;
-                    regdata_put(regdata, sizeof(regdata), regaddr, data + 1);
+                    regdata_put(regdata, sizeof(regdata), regaddr, data);
                     state = ST_NONE_RCVD;
                     break;
             }
@@ -94,16 +118,11 @@ void i2cs_init (void) {
     PORTC |= ((1 << PINC4) | (1 << PINC5));
 
     /* Initial I2C Slave */
-    TWAR = (I2CSLAVE_ADDR << 1) & 0xFE;        /* Set I2C Address, Ignore I2C General Address 0x00 */
-    TWDR = 0x00;                /* Default Initial Value */
+    TWAR = (I2CSLAVE_ADDR << 1) & 0xFE;         /* Set I2C Address, Ignore I2C General Address 0x00 */
+    TWDR = 0x00;                                /* Default Initial Value */
 
     /* Start Slave Listening: Clear TWINT Flag, Enable ACK, Enable TWI, TWI Interrupt Enable */
     TWCR = (1 << TWINT) | (1 << TWEA) | (1 << TWEN) | (1 << TWIE);
-
-    /* Initial Variable Used */
-    //regaddr = 0;
-    //regdata = 0;
-
 }
 
 
@@ -116,3 +135,4 @@ int main(void) {
         _delay_ms(10);
     }
 }
+/* EOF */
