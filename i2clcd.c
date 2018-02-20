@@ -153,17 +153,15 @@ bool lcd_gotolr(uint8_t line, uint8_t row) {
         return false;
     if (row > LCD_ROWS)
         return false;
-    //if ((line == 0) || (row == 0))
-    //    return false;
 
     uint8_t addr;
     switch(line) {
         case 0: 
-            addr = LCD_LINE1 + row;
+            addr = LCD_LINE0 + row;
             break;
 #if LCD_LINES>=2
         case 1: 
-            addr = LCD_LINE2 + row;
+            addr = LCD_LINE1 + row;
             break;
 #endif
 #if LCD_LINES>=3
@@ -173,11 +171,11 @@ bool lcd_gotolr(uint8_t line, uint8_t row) {
 #endif
 #if LCD_LINES>=4
         case 3: 
-            addr = LCD_LINE2 + row;
+            addr = LCD_LINE4 + row;
             break;
 #endif
         default: 
-            addr = LCD_LINE1 + row;
+            addr = LCD_LINE0 + row;
     }
     lcd_command( (1 << LCD_DDRAM) | addr);
     return true;

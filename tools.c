@@ -72,7 +72,7 @@ int32_t str2int(uint8_t * str) {
 }
 
 uint8_t int2str(int32_t num, uint8_t * str, uint8_t buf_len, int16_t base) {
-    static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     uint8_t i = 0, sign = 0;
     if (num < 0) {
         sign = '-';

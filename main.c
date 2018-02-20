@@ -17,7 +17,7 @@
 #include <util/twi.h>
 
 
-#define BAUD 38400
+#define BAUD 19200
 #include <util/setbaud.h>
 
 #include <fifo.h>
@@ -233,12 +233,39 @@ uint16_t twi_scan(void) {
     uint8_t str[4];
     outnl();
     while (addr < 127) {
+        if((addr == 0x38) || (addr == 0x7c))  {
+            addr++;
+            continue;
+        }
         twi_start();
         twi_write(addr << 1);
         if(TW_STATUS == TW_MT_SLA_ACK ) {
             outs("0x");
             int2str(addr, str, 3, 16);
             outl(str);
+        }
+        twi_stop();
+        addr++;
+    }
+    return addr;
+}
+
+
+uint16_t twi_scan_lcd(void) {
+    uint8_t addr = 1;
+    uint8_t str[4];
+    lcd_gotolr(1,1);
+    while (addr < 127) {
+        if((addr == 0x38) || (addr == 0x7c))  {
+            addr++;
+            continue;
+        }
+        twi_start();
+        twi_write(addr << 1);
+        if(TW_STATUS == TW_MT_SLA_ACK ) {
+            int2str(addr, str, 3, 16);
+            lcd_print(str);
+            lcd_putchar(' ');
         }
         twi_stop();
         addr++;
@@ -276,7 +303,7 @@ cdef_t cdef[] = {
 
 #define STR_LEN 164
 
-uint8_t *prompt = "READY>";
+uint8_t *prompt = "#READY>";
 
 
 int main() {
@@ -284,45 +311,68 @@ int main() {
     fifo_iohook();
     uart_init();
     timer_init();
-    pwm0_init();
-    pwm1_init();
-    pwm2_init();
-    adc_init();
+    //pwm0_init();
+    //pwm1_init();
+    //pwm2_init();
+    //adc_init();
 
     i2c_init();
+    //ds_init();
+
+    _delay_ms(100);
     lcd_init();
     wdt_init();
 
-
     sei();
 
-    _delay_ms(1000);
+    lcd_printlrc(0, 0, "########");
+
+    _delay_ms(500);
 
     outl("\r\nTINY SHELL V01");
     outs(prompt);
 
+
     uint8_t str[STR_LEN];
     memset(str, 0, STR_LEN);
 
-    _delay_ms(1000);
+    _delay_ms(100);
 
-    //twi_scan();
+
+#define SL_ADDR 0x43
 
     while (1) {
 
-#if 0
-        uint8_t d[12];
-        uint16_t r;
+        uint8_t data = 0;
+        lcd_clear();
 
-        outd(ds_get_hour());
-        outs(":");
-        outd(ds_get_min());
-        outs(":");
-        outd(ds_get_sec());
-        outnl();
-#endif
+
+        //uint8_t sec = ds_get_sec();
+        //uint8_t strsec[12];
+        //int2str(sec, strsec, 11, 16);
+        //lcd_printlrc(0, 0, strsec);
+
+        i2c_start_wait((SL_ADDR << 1) | I2C_WRITE);
+            data = i2c_write(0x01);
+            data = i2c_write(0x78);
+            i2c_stop();
+
+
+
+        if(!i2c_start((SL_ADDR << 1) | I2C_WRITE)) {
+            i2c_write(0x01);
+            i2c_rep_start((SL_ADDR << 1) | I2C_READ);
+            data = i2c_readNak();
+            i2c_stop();
+
+            uint8_t str1[12];
+            int2str(data, str1, 10, 16);
+            lcd_printlrc(0, 0, str1);
+        }
+
         uint8_t *s;
         s = str;
+
         while (fifo_gett(in, str, STR_LEN, '\r') > 0) {
 
             shell(str, cdef, sizeof(cdef) / sizeof(cdef[0]));
@@ -330,7 +380,7 @@ int main() {
             outs(prompt);
 
         }
-        _delay_ms(10);
+        _delay_ms(500);
     }
 
 }

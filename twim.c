@@ -55,7 +55,7 @@ uint8_t i2c_start(uint8_t address) {
         return 1;
 
     return 0;
-}  
+}
 
 
 /*

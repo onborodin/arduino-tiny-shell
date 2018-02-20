@@ -3,6 +3,11 @@
 #ifndef DC1307_H_IUI
 #define DC1307_H_IUI
 
+#define DS1307_ADDR  0x68
+#define I2C_READY    0
+#define I2C_FAIL     1
+
+
 uint8_t ds_write(uint8_t reg, uint8_t data);
 uint8_t ds_read(uint8_t reg);
 

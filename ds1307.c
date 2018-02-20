@@ -1,8 +1,5 @@
 /* $Id$ */
 
-#define DS1307_ADDR      0x68
-#define I2C_READY    0
-#define I2C_FAIL     1
 
 #include <twim.h>
 #include <ds1307.h>
@@ -12,10 +9,20 @@
 #define DS_HOUR 2
 
 
-uint8_t ds_write(uint8_t reg, uint8_t data) {
-    if(i2c_start((DS1307_ADDR << 1) | I2C_WRITE) == I2C_FAIL) 
-        return(0);
+/*
+    Example:
 
+    outd(ds_get_hour());
+    outs(":");
+    outd(ds_get_min());
+    outs(":");
+    outd(ds_get_sec());
+    outnl();
+ */
+
+
+uint8_t ds_write(uint8_t reg, uint8_t data) {
+    i2c_start_wait((DS1307_ADDR << 1) | I2C_WRITE); 
     i2c_write(reg);
     i2c_write(data);
     i2c_stop();
@@ -24,8 +31,7 @@ uint8_t ds_write(uint8_t reg, uint8_t data) {
 
 uint8_t ds_read(uint8_t reg) {
     volatile uint8_t data;
-    if(i2c_start((DS1307_ADDR << 1) | I2C_WRITE) == I2C_FAIL) 
-        return(0);
+    i2c_start_wait((DS1307_ADDR << 1) | I2C_WRITE);
     i2c_write(reg);
     i2c_rep_start((DS1307_ADDR << 1) | I2C_READ);
     data = i2c_readNak();

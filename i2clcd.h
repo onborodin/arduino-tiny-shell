@@ -33,7 +33,7 @@
 #define _I2CLCD_H
 
 /* SYSTEM CONFIGURATION
-    Change this settings to your configuration.
+   Change this settings to your configuration.
  */
 
 #ifndef F_CPU
@@ -46,19 +46,15 @@
 #define wait1ms _delay_ms(1)    /**< 1 ms delay */
 
 
-//-------------------------------------------------------------------------------------------------------------------
-
 #include <util/delay.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include <twim.h>
 
-//--Display-Configuration-Settings-----------------------------------------------------------------------------------
-
-/** \defgroup DISPLAY_CONFIGURATION DISPLAY CONFIGURATION
+/* DISPLAY CONFIGURATION
  Change this settings to your configuration.
-*/
+ */
 
 #ifndef LCD_I2C_DEVICE
 #define LCD_I2C_DEVICE	0x38    /* Change this to the address of your expander */
@@ -66,19 +62,15 @@
 #define LCD_LINES	2       /* Enter the number of lines of your display here */
 #define LCD_ROWS	16      /* Enter the number of rows of your display here */
 
-#define LCD_LINE1	0x00    /* This should be 0x00 on all displays */
-#define LCD_LINE2	0x40    /* Change this to the address for line 2 on your display */
-#define LCD_LINE3	0x14    /* Change this to the address for line 3 on your display */
-#define LCD_LINE4	0x54    /* Change this to the address for line 4 on your display */
+#define LCD_LINE0	0x00    /* This should be 0x00 on all displays */
+#define LCD_LINE1	0x40    /* Change this to the address for line 2 on your display */
+#define LCD_LINE2	0x14    /* Change this to the address for line 3 on your display */
+#define LCD_LINE3	0x54    /* Change this to the address for line 4 on your display */
 
 
-//-------------------------------------------------------------------------------------------------------------------
-
-//--The-following-definitions-are-corresponding-to-the-PIN-Assignment-(see-above)------------------------------------
-
-/** \defgroup PIN_ASSIGNMENT PIN ASSIGNMENT
+/* PIN ASSIGNMENT
  This pin assignment shows how the display is connected to the PCF8574.
-*/
+ */
 
 #define LCD_D4_PIN	4       /* LCD-Pin D4 is connected to P4 on the PCF8574 */
 #define LCD_D5_PIN	5       /* LCD-Pin D5 is connected to P5 on the PCF8574 */
@@ -92,14 +84,12 @@
 #define LCD_E_PIN	2       /* LCD-Pin E is connected to P7 on the PCF8574 */
 
 
-//-------------------------------------------------------------------------------------------------------------------
-
-/** \defgroup DEFINED_BITS DEFINED BITS
- With each read/write operation to/from the display two bytes are send/received. \n
+/* DEFINED BITS
+ With each read/write operation to/from the display two bytes are send/received.
  In each of those two bytes the higher nibble contains the RS, RW, EMPTY and ENABLE bit.
- In the byte which is read/written first, the lower nibble contains bits 0 to 3 and \n 
+ In the byte which is read/written first, the lower nibble contains bits 0 to 3 and
  in the second byte the lower nibble contains bit 4 to 7. 
-*/
+ */
 
 #define LCD_D0		(1 << LCD_D4_PIN)       /* bit 0 in 1st lower nibble */
 #define LCD_D1		(1 << LCD_D5_PIN)       /* bit 1 in 1st lower nibble */
@@ -119,7 +109,6 @@
 
 
 /* DEFINED READ MODES */
-
 #define LCD_ADDRESS	0       /* Used for reading the address-counter and busy-flag */
 #define LCD_DATA	1       /* Used for reading data */
 
@@ -198,7 +187,7 @@ bool lcd_printlrc(uint8_t line, uint8_t row, uint8_t *string);  /* Print string 
 void lcd_command(uint8_t command);                              /* Issue a command to the display */
 void lcd_wait_us(uint16_t us);                                  /* Wait some microseconds */
 void lcd_wait_ms(uint16_t ms);                                  /* Wait some milliseconds */
-void lcd_backlight(int bl);                                     /* ON/OFF backlight bit for next operation*/
+void lcd_backlight(uint8_t bl);                                     /* ON/OFF backlight bit for next operation*/
 void lcd_clear(void);                                           /* Clear screen */
 
 #endif
