@@ -108,7 +108,7 @@ ISR(TWI_vect) {
     }
     /* Clear TWINT Flag */
     TWCR |= (1 << TWINT);
-    /* Enable Global Interrupt */
+    /* Enable global Interrupt */
     sei();
 }
 
