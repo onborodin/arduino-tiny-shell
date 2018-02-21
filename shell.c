@@ -8,9 +8,7 @@
 #include <shell.h>
 #include <fifo.h>
 
-
-
-bool gettseq(uint8_t ** headp, uint8_t ** tailp, uint8_t c, uint8_t t) {
+bool shell_get_cmd(uint8_t ** headp, uint8_t ** tailp, uint8_t c, uint8_t t) {
     if ((*headp)[0] == 0)
         return false;
 
@@ -32,7 +30,7 @@ bool gettseq(uint8_t ** headp, uint8_t ** tailp, uint8_t c, uint8_t t) {
 }
 
 
-bool getcseq(uint8_t ** headp, uint8_t ** tailp, uint8_t ** endp, const uint8_t c) {
+bool shell_get_args(uint8_t ** headp, uint8_t ** tailp, uint8_t ** endp, const uint8_t c) {
     while ((*headp)[0] == c && (*headp)[0] != 0)
         (*headp)++;
     if ((*headp)[0] == 0)
@@ -51,46 +49,48 @@ bool getcseq(uint8_t ** headp, uint8_t ** tailp, uint8_t ** endp, const uint8_t 
     return true;
 }
 
-void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
+int8_t shell(uint8_t * str, act_t * act, uint8_t act_count) {
 
-    uint8_t space = ' ', semic = ';', null = 0, newl = '\n';
+    uint8_t semic = ';';
+    uint8_t space = ' ';
 
     uint8_t *head = str;
     uint8_t *tail;
 
-    while (gettseq(&head, &tail, space, semic)) {
-        uint8_t *cmdhead = head;
-        uint8_t *cmdtail;
+    while (shell_get_cmd(&head, &tail, space, semic)) {
+        uint8_t *cmd_head = head;
+        uint8_t *cmd_tail;
 
         cmd_t cmd = { };
         cmd.argc = 0;
 
-        while (getcseq(&cmdhead, &cmdtail, &tail, space) && (cmd.argc < MAX_ARGC)) {
-            cmd.arg[cmd.argc] = cmdhead;
+        while (shell_get_args(&cmd_head, &cmd_tail, &tail, space) && (cmd.argc < MAX_ARGC)) {
+            cmd.arg[cmd.argc] = cmd_head;
             cmd.argc++;
-            cmdhead = cmdtail;
+            cmd_head = cmd_tail;
         };
 
-        uint8_t i = 0, n = ccount, m = 0;
+        uint8_t i = 0;
 
-        int16_t r = 0;
-        bool s = false;
-        while (i < n) {
-            if (str_cmp(cdef[i].name, cmd.arg[0])) {
-                s = true;
-                if (cmd.argc < cdef[i].argc) {
-                    outl("ERR NOT ENOUG ARGS");
+        int16_t ret_code = 0;
+        bool act_found = false;
+
+        while (i < act_count) {
+            if (str_cmp(act[i].name, cmd.arg[0])) {
+                act_found = true;
+                if (cmd.argc < act[i].argc) {
+                    return SH_CMD_ARGCNT;
                     break;
                 }
-                switch (cdef[i].argc) {
+                switch (act[i].argc) {
                 case 0:
-                    r = (cdef[i].func) ();
+                    ret_code = (act[i].func)();
                     break;
                 case 1:
-                    r = (cdef[i].func) (cmd.arg[1]);
+                    ret_code = (act[i].func)(cmd.arg[1]);
                     break;
                 case 2:
-                    r = (cdef[i].func) (cmd.arg[1], cmd.arg[2]);
+                    ret_code = (act[i].func)(cmd.arg[1], cmd.arg[2]);
                     break;
                 };
                 break;
@@ -98,21 +98,16 @@ void shell(uint8_t * str, cdef_t * cdef, uint8_t ccount) {
             i++;
         }
 
-        uint8_t c[12];
-
-        if (!s) {
-            outl("ERR COMMAND NOT FOUND");
-        } else if (r < 0) {
-            int2str(r, c, sizeof(c), 10);
-            outs("ERR ");
-            outl(c);
+        if (!act_found) {
+            return SH_CMD_NOTFND;
+        } else if (ret_code < 0) {
+            return SH_CMD_ERROR;
         } else {
-            int2str(r, c, sizeof(c), 10);
-            outs("OK ");
-            outl(c);
+            return ret_code;
         }
         head = tail;
     }
+    return SH_CMD_SUCCESS;
 }
 
 //EOF

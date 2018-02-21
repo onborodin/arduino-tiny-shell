@@ -65,15 +65,15 @@ uint8_t ds_get_hour(void) {
 
 
 void ds_set_sec(uint8_t num) {
-    uint8_t r = ds_write(DS_SEC, ds_dec2bcd(num));
+    ds_write(DS_SEC, ds_dec2bcd(num));
 }
 
 void ds_set_min(uint8_t num) {
-    uint8_t r = ds_write(DS_MIN, ds_dec2bcd(num));
+    ds_write(DS_MIN, ds_dec2bcd(num));
 }
 
 void ds_set_hour(uint8_t num) {
-    uint8_t r = ds_write(DS_HOUR, ds_dec2bcd(num));
+    ds_write(DS_HOUR, ds_dec2bcd(num));
 }
 
 #define DS_OSC  7

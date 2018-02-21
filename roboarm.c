@@ -31,7 +31,6 @@ void pwm0_init(void) {
 }
 
 void pwm1_init(void) {
-
     /* Timer 1 */
     TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM10) | (1 << WGM11);
     TCCR1B = (1 << WGM12) | (1 << CS10) | (1 << CS12);
@@ -74,7 +73,7 @@ uint16_t adc_read(uint8_t ch) {
 }
 
 uint8_t map2 (uint16_t level, uint8_t min, uint8_t max) {
-    return ((level * (max - min))/1024 + min);
+    return ((level * (max - min)) / 1024 + min);
 }
 
 int main(void) {

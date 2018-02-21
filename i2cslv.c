@@ -53,7 +53,7 @@ int8_t regdata_get(int8_t *regdata, uint8_t regdata_size, uint8_t addr) {
 
 void regdata_put(int8_t *regdata, uint8_t regdata_size, uint8_t addr, int8_t data) {
     if (addr < regdata_size) {
-        regdata[addr] = ++data; /* Some operation with received data, for example increment */
+        regdata[addr] = data + 2; /* Some operation with received data, for example increment */
     }
 }
 

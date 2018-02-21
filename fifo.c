@@ -6,64 +6,13 @@
 #include <string.h>
 #include <stdio.h>
 
-
-#include <tools.h>
 #include <fifo.h>
+#include <tools.h>
 
 #ifndef FIFO_BUFFER_SIZE
 #define FIFO_BUFFER_SIZE 128
 #endif
 
-static uint8_t inbuf[FIFO_BUFFER_SIZE];
-static uint8_t outbuf[FIFO_BUFFER_SIZE];
-
-FIFO fifo_in, fifo_out;
-FIFO *in, *out;
-
-void outc(uint8_t c) {
-    fifo_putc(out, c);
-}
-
-void outs(uint8_t * str) {
-    fifo_puts(out, str);
-}
-
-void outl(uint8_t * str) {
-    fifo_puts(out, str);
-    fifo_puts(out, "\r\n");
-}
-
-void outd(uint16_t num) {
-        uint8_t str[16];
-        int2str(num, str, sizeof(str), 10);
-        outs(str);
-}
-
-void outnl(void) {
-    fifo_puts(out, "\r\n");
-}
-
-
-
-int uart_putchar(char c, FILE * stream) {
-    return fifo_putc(&fifo_out, c);
-}
-
-int uart_getchar(FILE * stream) {
-    return (int)fifo_getc(&fifo_out);
-}
-
-FILE uart_str = FDEV_SETUP_STREAM(uart_putchar, uart_getchar, _FDEV_SETUP_RW);
-
-void fifo_iohook(void) {
-    in = &fifo_in;
-    out = &fifo_out;
-
-    fifo_init(in, inbuf, sizeof(inbuf));
-    fifo_init(out, outbuf, sizeof(outbuf));
-
-    stdout = stdin = stderr = &uart_str;
-}
 
 void fifo_init(FIFO * b, uint8_t * buffer, uint8_t buffer_len) {
     if (b && buffer) {
@@ -82,7 +31,7 @@ uint8_t fifo_count(const FIFO * b) {
     return 0;
 }
 
-static bool fifo_full(const FIFO * b) {
+bool fifo_full(const FIFO * b) {
     if (b) {
         return (fifo_count(b) == b->buffer_len);
     }
@@ -143,6 +92,7 @@ uint8_t fifo_puts(FIFO * b, uint8_t * string) {
                 return i;
         }
     }
+    return 0;
 }
 
 bool fifo_scanc(FIFO * b, uint8_t c) {
@@ -161,9 +111,10 @@ bool fifo_scanc(FIFO * b, uint8_t c) {
         }
         return false;
     }
+    return false;
 }
 
-uint8_t fifo_gett(FIFO * b, uint8_t * str, uint8_t len, uint8_t term) {
+uint8_t fifo_get_token(FIFO * b, uint8_t * str, uint8_t len, uint8_t term) {
     if (b) {
         memset((void *)str, 0, len);
 
@@ -178,6 +129,7 @@ uint8_t fifo_gett(FIFO * b, uint8_t * str, uint8_t len, uint8_t term) {
         }
         return 0;
     }
+    return 0;
 }
 
 /* EOF */
