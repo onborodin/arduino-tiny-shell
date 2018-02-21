@@ -21,8 +21,8 @@
     #define SL_ADDR 0x43
     uint8_t regdaddr = 0x01;
     uint8_t regdata = 0;
-    i2c_start_wait((SL_ADDR << 1) | I2C_WRITE));
-    i2c_write(0x01);
+    i2c_start_wait((SL_ADDR << 1) | I2C_WRITE);
+    i2c_write(regdaddr);
     i2c_rep_start((SL_ADDR << 1) | I2C_READ);
     regdata = i2c_readNak();
     i2c_stop();
