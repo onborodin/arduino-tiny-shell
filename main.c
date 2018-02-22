@@ -79,7 +79,7 @@ void uart_init(void) {
 }
 
 void wdt_init(void) {
-    wdt_enable(WDTO_250MS);
+    wdt_enable(WDTO_30MS);
     WDTCSR = (1 << WDIE);
 }
 
@@ -111,11 +111,56 @@ act_t shell_act[] = {
 #define MAX_CMD_LEN 164
 uint8_t prompt[] = "READY>";
 
+void timer1_init(void) {
+    TCCR1A = 0;
+    TCCR1B = (1 << CS12);
+    TIMSK1 = (1 << TOIE2);
+}
+
+void timer1_reset(void) {
+    TCNT1 = 0;
+}
+
+ISR(TIMER1_OVF_vect) {
+}
+
+void int0_init(void) {
+    //EICRA = (1 << ISC00);
+    EICRA = (1 << ISC01) | (1 << ISC00);
+    EIMSK |= (1 << INT0);
+    DDRD &= ~(1 << PD2);
+}
+
+#define RC_ST_UNK    0
+#define RC_ST_START  1
+#define RC_ST_DONE   2
+
+uint8_t rc_state = RC_ST_UNK;
+
+ISR(INT0_vect) {
+    if (rc_state == RC_ST_UNK) {
+        TCNT1 = 0;
+        rc_state = RC_ST_START;
+    } else if (rc_state == RC_ST_START) {
+        uint16_t count = TCNT1;
+        printf("%d ", count);
+        //if ((count < 50) && (count > 0)) 
+        //    printf("_");
+        //if (count > 50) 
+        //    printf("T");
+        rc_state = RC_ST_UNK;
+    }
+}
+
 int main() {
     io_hook();
     uart_init();
     i2c_init();
     wdt_init();
+    lcd_init();
+
+    //timer1_init();
+    //int0_init();
     sei();
 
     _delay_ms(100);
@@ -123,13 +168,17 @@ int main() {
 
     uint8_t str[MAX_CMD_LEN];
 
+    int8_t sec = 30, min = 1;
+    int8_t secstr[3], minstr[3];
+
     while (1) {
+
         while (fifo_get_token(in, str, MAX_CMD_LEN, '\r') > 0) {
             int8_t ret_code = shell(str, shell_act, sizeof(shell_act) / sizeof(shell_act[0]));
             if (ret_code == SH_CMD_NOTFND) 
-                fifo_puts(out, (uint8_t *)"ERR COMMAND NOT FOUND\r\n");
+                fifo_puts(out, (uint8_t *)"COMMAND NOT FOUND\r\n");
             fifo_puts(out, prompt);
         }
-        _delay_ms(100);
+        _delay_ms(300);
     }
 }

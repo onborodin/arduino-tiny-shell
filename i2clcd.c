@@ -1,5 +1,5 @@
 /*
-
+ $Id$
  */
 
 #include <stdlib.h>
@@ -49,8 +49,7 @@ void lcd_write_i2c(uint8_t value) {
 
 /* Write byte to display with toggle of enable-bit */
 void lcd_write(uint8_t value) {
-    {
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         lcd_write_i2c(value | LCD_E);   /* Set enable to high */
         lcd_wait_us(252);
         lcd_write_i2c(value | LCD_E);   /* Send data, keep enable high */
@@ -101,7 +100,6 @@ bool lcd_putcharlr(uint8_t line, uint8_t row, uint8_t value) {
 
     return true;
 }
-
 
 /* Print string to position (If string is longer than LCD_ROWS overwrite first chars)(line, row, string) */
 bool lcd_printlc(uint8_t line, uint8_t row, uint8_t *string) {
@@ -205,5 +203,4 @@ void lcd_backlight(uint8_t bl) {
 void lcd_clear(void) {
     lcd_command(LCD_CLEAR);
 }
-
 /* EOF */

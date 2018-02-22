@@ -71,7 +71,7 @@ int32_t str2int(uint8_t * str) {
     return n;
 }
 
-uint8_t int2str(int32_t num, uint8_t * str, uint8_t buf_len, int16_t base) {
+uint8_t *int2str(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
     static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     uint8_t i = 0, sign = 0;
     if (num < 0) {
@@ -79,23 +79,87 @@ uint8_t int2str(int32_t num, uint8_t * str, uint8_t buf_len, int16_t base) {
         num = -num;
     }
     do {
-        str[i++] = digits[num % base];
-    } while ((num /= base) > 0 && i < buf_len);
+        dst[i++] = digits[num % base];
+    } while ((num /= base) > 0 && i < dst_len);
 
     if (sign)
-        str[i++] = '-';
-    str[i] = 0;
+        dst[i++] = '-';
+    dst[i] = 0;
+
+    uint8_t c, b = 0;
+    while (i-- && b < i) {
+        c = dst[b];
+        dst[b] = dst[i];
+        dst[i] = c;
+        b++;
+    }
+    return dst;
+}
+
+uint8_t *int2str_r(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
+    static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    uint8_t i = 0, sign = 0;
+    if (num < 0) {
+        sign = '-';
+        num = -num;
+    }
+    do {
+        dst[i++] = digits[num % base];
+    } while ((num /= base) > 0 && i < dst_len);
+
+    if (sign)
+        dst[i++] = '-';
+    dst[i] = 0;
 
     uint8_t len = i - 1;
     uint8_t c, b = 0;
 
     while (i-- && b < i) {
-        c = str[b];
-        str[b] = str[i];
-        str[i] = c;
+        c = dst[b];
+        dst[b] = dst[i];
+        dst[i] = c;
         b++;
     }
-    return len;
+
+    len = str_len(dst);
+    if (len < dst_len) {
+        uint8_t shift = dst_len - len;
+        i = len + 1;
+        while (i >= 0 && i <= dst_len) {
+            dst[i + shift] = dst[i];
+            i--;
+        }
+        i = shift - 1;
+        while (i >= 0 && i < shift) {
+            dst[i] = ' ';
+            i--;
+        }
+    }
+    return dst;
+}
+
+uint8_t * str_toright(uint8_t *src, uint8_t *dst, uint8_t len_dst) {
+    uint8_t len_src = str_len(src);
+    uint8_t i, shift;
+    for(i = 0; i < len_dst; i++)
+        dst[i] = ' ';
+
+    if (len_dst > len_src) {
+        shift = len_dst - len_src;
+        i = len_src + 1;
+        while (i >= 0 && i <= len_src + 1) {
+            dst[i + shift] = src[i];
+            i--;
+        }
+    } else {
+        i = len_dst + 1;
+        shift = len_src - len_dst;
+        while (i >= 0 && i <= len_dst + 1) {
+            dst[i] = src[i + shift];
+            i--;
+        }
+    }
+    return dst;
 }
 
 uint8_t *tok_comp(uint8_t ** str, uint8_t c, uint8_t * end) {
@@ -121,5 +185,4 @@ uint8_t *tok_comp(uint8_t ** str, uint8_t c, uint8_t * end) {
         (*str)++;
     return p;
 }
-
 /* EOF */

@@ -10,6 +10,7 @@
 all: main.hex
 
 CFLAGS= -Wall -I. -Os -DF_CPU=16000000UL -mmcu=atmega328p --std=c99
+#CFLAGS+= -save-temps
 #CFLAGS+= -fno-unwind-tables -fno-asynchronous-unwind-tables
 #CFLAGS+= -ffunction-sections -fdata-sections
 LDFLAGS= -s -DF_CPU=16000000UL -mmcu=atmega328p

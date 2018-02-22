@@ -1,6 +1,5 @@
 /* $Id$ */
 
-
 #include <twim.h>
 #include <ds1307.h>
 
@@ -8,10 +7,8 @@
 #define DS_MIN  1
 #define DS_HOUR 2
 
-
 /*
     Example:
-
     outd(ds_get_hour());
     outs(":");
     outd(ds_get_min());
@@ -19,7 +16,6 @@
     outd(ds_get_sec());
     outnl();
  */
-
 
 uint8_t ds_write(uint8_t reg, uint8_t data) {
     i2c_start_wait((DS1307_ADDR << 1) | I2C_WRITE); 
@@ -91,6 +87,4 @@ void ds_init(void) {
     r &= ~(1 << DS_24H);
     ds_write(DS_HOUR, r);
 }
-
-
 /* EOF */

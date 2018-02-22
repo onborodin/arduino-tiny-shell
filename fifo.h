@@ -4,7 +4,7 @@
 #define UART_H_IUI
 
 #ifndef FIFO_BUFFER_SIZE
-#define FIFO_BUFFER_SIZE 164
+#define FIFO_BUFFER_SIZE 128
 #endif
 
 typedef struct fifo {

@@ -1,4 +1,3 @@
-
 /* $Id$ */
 
 #include <stdint.h>
@@ -9,99 +8,94 @@
 #include <fifo.h>
 #include <tools.h>
 
-#ifndef FIFO_BUFFER_SIZE
-#define FIFO_BUFFER_SIZE 128
-#endif
-
-
-void fifo_init(FIFO * b, uint8_t * buffer, uint8_t buffer_len) {
-    if (b && buffer) {
+void fifo_init(FIFO *fifo, uint8_t * buffer, uint8_t buffer_len) {
+    if (fifo && buffer) {
         memset((void **)buffer, 0, buffer_len);
-        b->buffer_len = buffer_len;
-        b->buffer = buffer;
-        b->head = 0;
-        b->tail = 0;
+        fifo->buffer_len = buffer_len;
+        fifo->buffer = buffer;
+        fifo->head = 0;
+        fifo->tail = 0;
     }
 }
 
-uint8_t fifo_count(const FIFO * b) {
-    if (b) {
-        return (b->head - b->tail);
+uint8_t fifo_count(const FIFO *fifo) {
+    if (fifo) {
+        return (fifo->head - fifo->tail);
     }
     return 0;
 }
 
-bool fifo_full(const FIFO * b) {
-    if (b) {
-        return (fifo_count(b) == b->buffer_len);
+bool fifo_full(const FIFO *fifo) {
+    if (fifo) {
+        return (fifo_count(fifo) == fifo->buffer_len);
     }
     return true;
 }
 
-bool fifo_empty(const FIFO * b) {
-    if (b) {
-        return (fifo_count(b) == 0);
+bool fifo_empty(const FIFO *fifo) {
+    if (fifo) {
+        return (fifo_count(fifo) == 0);
     }
     return true;
 }
 
-uint8_t fifo_peek(const FIFO * b) {
+uint8_t fifo_peek(const FIFO *fifo) {
     uint8_t data = 0;
 
-    if (!fifo_empty(b)) {
-        data = b->buffer[b->tail % b->buffer_len];
+    if (!fifo_empty(fifo)) {
+        data = fifo->buffer[fifo->tail % fifo->buffer_len];
     }
     return data;
 }
 
-bool fifo_back(FIFO * b) {
-    if (!fifo_empty(b)) {
-        b->head--;
+bool fifo_back(FIFO *fifo) {
+    if (!fifo_empty(fifo)) {
+        fifo->head--;
         return true;
     }
     return false;
 }
 
-uint8_t fifo_getc(FIFO * b) {
+uint8_t fifo_getc(FIFO *fifo) {
     uint8_t data = 0;
 
-    if (!fifo_empty(b)) {
-        data = b->buffer[b->tail % b->buffer_len];
-        b->tail++;
+    if (!fifo_empty(fifo)) {
+        data = fifo->buffer[fifo->tail % fifo->buffer_len];
+        fifo->tail++;
     }
     return data;
 }
 
-bool fifo_putc(FIFO * b, uint8_t data) {
+bool fifo_putc(FIFO *fifo, uint8_t data) {
     bool status = false;
 
-    if (b) {
-        if (!fifo_full(b)) {
-            b->buffer[b->head % b->buffer_len] = data;
-            b->head++;
+    if (fifo) {
+        if (!fifo_full(fifo)) {
+            fifo->buffer[fifo->head % fifo->buffer_len] = data;
+            fifo->head++;
             status = true;
         }
     }
     return status;
 }
 
-uint8_t fifo_puts(FIFO * b, uint8_t * string) {
-    if (b) {
+uint8_t fifo_puts(FIFO *fifo, uint8_t * string) {
+    if (fifo) {
         for (uint8_t i = 0; i < str_len(string); i++) {
-            if (!fifo_putc(b, string[i]))
+            if (!fifo_putc(fifo, string[i]))
                 return i;
         }
     }
     return 0;
 }
 
-bool fifo_scanc(FIFO * b, uint8_t c) {
-    if (b) {
-        if (!fifo_empty(b)) {
-            uint8_t tail = b->tail;
+bool fifo_scanc(FIFO *fifo, uint8_t c) {
+    if (fifo) {
+        if (!fifo_empty(fifo)) {
+            uint8_t tail = fifo->tail;
 
-            for (uint8_t i = 0; i < fifo_count(b); i++) {
-                uint8_t data = b->buffer[tail % b->buffer_len];
+            for (uint8_t i = 0; i < fifo_count(fifo); i++) {
+                uint8_t data = fifo->buffer[tail % fifo->buffer_len];
 
                 if (data == c) {
                     return true;
@@ -114,14 +108,14 @@ bool fifo_scanc(FIFO * b, uint8_t c) {
     return false;
 }
 
-uint8_t fifo_get_token(FIFO * b, uint8_t * str, uint8_t len, uint8_t term) {
-    if (b) {
+uint8_t fifo_get_token(FIFO *fifo, uint8_t * str, uint8_t len, uint8_t term) {
+    if (fifo) {
         memset((void *)str, 0, len);
 
-        if (fifo_scanc(b, term) && str) {
+        if (fifo_scanc(fifo, term) && str) {
             uint8_t i = 0, c = 0;
 
-            while ((c = fifo_getc(b)) != 0 && c != term && i < len) {
+            while ((c = fifo_getc(fifo)) != 0 && c != term && i < len) {
                 str[i] = c;
                 i++;
             }
