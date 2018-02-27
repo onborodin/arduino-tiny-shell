@@ -168,27 +168,40 @@
 #define ON	0
 #define OFF	1
 
+typedef struct screen {
+    uint8_t line;
+    uint8_t row;
+    uint8_t buf[LCD_LINES][LCD_ROWS];
+} screen_t;
 
 /* FUNCTIONS */
 
 void lcd_init(void);                                            /* Display initialization sequence */
-void lcd_write_i2c(uint8_t value);                              /* Write data to i2c */
-void lcd_write(uint8_t value);                                  /* Write byte to display with toggle of enable-bit */
-bool lcd_gotolr(uint8_t line, uint8_t row);                     /* Go to position */
 
-void lcd_putchar(uint8_t value);                                /* Put char to cursor position */
-bool lcd_putcharlr(uint8_t line, uint8_t row, uint8_t value);   /* Put char to position */
-void lcd_print(uint8_t *string);                                /* Print string to cursor position */
+void lcd_hw_write_i2c(uint8_t value);                              /* Write data to i2c */
+void lcd_hw_write(uint8_t value);                                  /* Write byte to display with toggle of enable-bit */
 
-bool lcd_printlr(uint8_t line, uint8_t row, uint8_t *string);   /* Print string to position */
-bool lcd_printlc(uint8_t line, uint8_t row, uint8_t *string);   /* Print string to position, overwrite first chars */
-bool lcd_printlrc(uint8_t line, uint8_t row, uint8_t *string);  /* Print string to position, owerwrite next line */
+bool lcd_hw_gotolr(uint8_t line, uint8_t row);                     /* Go to position */
+void lcd_hw_putchar(uint8_t value);                                /* Put char to cursor position */
+bool lcd_hw_putcharlr(uint8_t line, uint8_t row, uint8_t value);   /* Put char to position */
+void lcd_hw_command(uint8_t command);                              /* Issue a command to the display */
+void lcd_hw_backlight(uint8_t bl);                              /* ON/OFF backlight bit for next operation*/
+void lcd_hw_clear(void);                                        /* Clear screen */
 
-void lcd_command(uint8_t command);                              /* Issue a command to the display */
+void lcd_render(screen_t *screen);                              /* Render screen buffer */
+bool lcd_print(screen_t *screen, uint8_t *string);              /* Print string to cursor position */
+
+bool lcd_printlr(screen_t *screen, uint8_t line, uint8_t row, uint8_t *string);
+bool lcd_putclr(screen_t *screen, uint8_t line, uint8_t row, uint8_t data);
+
+void lcd_clear(screen_t *screen);
+void lcd_home(screen_t *screen);
+void lcd_pos(screen_t *screen, uint8_t line, uint8_t row);
+
 void lcd_wait_us(uint16_t us);                                  /* Wait some microseconds */
 void lcd_wait_ms(uint16_t ms);                                  /* Wait some milliseconds */
-void lcd_backlight(uint8_t bl);                                     /* ON/OFF backlight bit for next operation*/
-void lcd_clear(void);                                           /* Clear screen */
+
+
 
 #endif
 /* EOF */
