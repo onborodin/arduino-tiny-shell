@@ -9,14 +9,18 @@
 
 all: main.hex
 
-CFLAGS= -Wall -I. -Os -DF_CPU=16000000UL -mmcu=atmega328p --std=c99
+CFLAGS+= -I. -Os -DF_CPU=16000000UL -mmcu=atmega328p --std=c99
+#CFLAGS+= -Wall
 #CFLAGS+= -save-temps
 #CFLAGS+= -fno-unwind-tables -fno-asynchronous-unwind-tables
-#CFLAGS+= -ffunction-sections -fdata-sections
-LDFLAGS= -s -DF_CPU=16000000UL -mmcu=atmega328p
+CFLAGS+= -ffunction-sections -fdata-sections
+CFLAGS+= -MD -MP -MT $(*F).o -MF $(@F).d 
 
-main.elf: main.o fifo.o tools.o shell.o  twim.o ds1307.o i2clcd.o
-	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o
+LDFLAGS+= -s -DF_CPU=16000000UL -mmcu=atmega328p -lm
+LDFLAGS+= -Wl,-u,vfprintf -lprintf_flt
+
+main.elf: main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o md5.o adc.o mpu6050.o mpu6050dmp6.o
+	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o adc.o md5.o mpu6050.o mpu6050dmp6.o
 	avr-size --format=berkeley $@
 
 
@@ -59,6 +63,6 @@ backup:
 
 
 clean:
-	rm -f *.i *.o *.s *.elf *~ *.hex 
+	rm -f *.i *.o *.s *.elf *~ *.hex *.d
 
 #EOF

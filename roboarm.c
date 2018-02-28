@@ -60,7 +60,7 @@ void adc_init() {
 
 uint16_t adc_read(uint8_t ch) {
 
-    if (ch > 6)
+    if (ch > 7)
         return 0;
 
     ch &= 0b00000111;

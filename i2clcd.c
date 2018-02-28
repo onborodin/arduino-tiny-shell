@@ -147,7 +147,7 @@ void lcd_clear(screen_t *screen) {
             screen->buf[line][row] = ' ';
         }
     }
-    lcd_render(screen);
+    //lcd_render(screen);
 }
 
 /* Set cursor to home position */
@@ -192,7 +192,7 @@ bool lcd_printlr(screen_t *screen, uint8_t line, uint8_t row, uint8_t *string) {
         i++;
         row++;
     }
-    lcd_render(screen);
+    //lcd_render(screen);
     return true;
 }
 

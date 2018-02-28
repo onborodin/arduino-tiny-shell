@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <tools.h>
 
+
 uint16_t str_len(uint8_t * str) {
     uint16_t i = 0;
     while (str[i] != 0)
@@ -30,6 +31,17 @@ bool str_cmp(uint8_t * str1, uint8_t * str2) {
     }
     return true;
 }
+
+uint8_t *str_copy(uint8_t * src, uint8_t * dst, uint8_t len) {
+    uint8_t i = 0;
+    while (src[i] != 0 && i < len) {
+        dst[i] = src[i];
+        i++;
+    }
+    dst[i] = 0;
+    return dst;
+}
+
 
 uint8_t *str_ltrim(uint8_t * str, uint8_t c) {
     while (str[0] == c && str[0] != 0)
@@ -72,17 +84,20 @@ int32_t str2int(uint8_t * str) {
 }
 
 uint8_t *int2str(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
-    static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const uint8_t digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
     uint8_t i = 0, sign = 0;
+
     if (num < 0) {
         sign = '-';
         num = -num;
     }
+
     do {
         dst[i++] = digits[num % base];
     } while ((num /= base) > 0 && i < dst_len);
 
-    if (sign)
+    if (sign > 0)
         dst[i++] = '-';
     dst[i] = 0;
 
@@ -96,45 +111,66 @@ uint8_t *int2str(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
     return dst;
 }
 
-uint8_t *int2str_r(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
-    static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    uint8_t i = 0, sign = 0;
-    if (num < 0) {
-        sign = '-';
-        num = -num;
-    }
+uint8_t *uint2str(uint32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
+    const uint8_t digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    uint8_t i = 0;
+
     do {
         dst[i++] = digits[num % base];
     } while ((num /= base) > 0 && i < dst_len);
 
-    if (sign)
-        dst[i++] = '-';
     dst[i] = 0;
 
-    uint8_t len = i - 1;
     uint8_t c, b = 0;
-
     while (i-- && b < i) {
         c = dst[b];
         dst[b] = dst[i];
         dst[i] = c;
         b++;
     }
+    return dst;
+}
 
-    len = str_len(dst);
-    if (len < dst_len) {
-        uint8_t shift = dst_len - len;
-        i = len + 1;
-        while (i >= 0 && i <= dst_len) {
-            dst[i + shift] = dst[i];
-            i--;
-        }
-        i = shift - 1;
-        while (i >= 0 && i < shift) {
-            dst[i] = ' ';
-            i--;
-        }
+uint8_t *int2str_r(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
+    const uint8_t digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    uint8_t i;
+    for(i = 0; i < dst_len; i++) {
+        dst[i] = ' ';
     }
+
+    uint8_t sign = 0;
+    dst[dst_len] = 0;
+
+    if (num < 0) {
+        sign = '-';
+        num = -num;
+    }
+
+    i = dst_len;
+    do {
+        dst[--i] = digits[num % base];
+    } while ((num /= base) > 0 && i > 0);
+
+    if (sign > 0 && i > 0)
+        dst[--i] = '-';
+
+    return dst;
+}
+
+uint8_t *uint2str_r(int32_t num, uint8_t * dst, uint8_t dst_len, int16_t base) {
+    const uint8_t digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    uint8_t i;
+    for(i = 0; i < dst_len; i++) {
+        dst[i] = ' ';
+    }
+
+    dst[dst_len] = 0;
+
+    i = dst_len;
+    do {
+        dst[--i] = digits[num % base];
+    } while ((num /= base) > 0 && i > 0);
+
     return dst;
 }
 
