@@ -30,7 +30,21 @@
 #define MD5_H_
 
 #include <stdint.h>
+#include <avr/pgmspace.h>
 
+/*
+    uint8_t passw[] = "123";
+    md5_hash_t hash;
+    md5_hashstr_t hashstr;
+
+    md5(&hash, passw, str_len(passw) * 8);
+    md5_tohex(hash, hashstr);
+
+    puts(hashstr);
+ */
+
+
+extern const uint32_t md5_T[];
 
 #define MD5_HASH_BITS  128
 #define MD5_HASH_BYTES (MD5_HASH_BITS/8)
@@ -44,6 +58,7 @@ typedef struct md5_ctx_st {
 } md5_ctx_t;
 
 typedef uint8_t md5_hash_t[MD5_HASH_BYTES];
+typedef uint8_t md5_hashstr_t[MD5_HASH_BYTES * 2 + 1];
 
 
 void md5_init(md5_ctx_t * s);
@@ -51,5 +66,6 @@ void md5_nextBlock(md5_ctx_t * state, const void *block);
 void md5_lastBlock(md5_ctx_t * state, const void *block, uint16_t length);
 void md5_ctx2hash(md5_hash_t * dest, const md5_ctx_t * state);
 void md5(md5_hash_t * dest, const void *msg, uint32_t length_b);
+void md5_tohex(md5_hash_t hash, md5_hashstr_t hashstr);
 
-#endif                          /*MD5_H_ */
+#endif
