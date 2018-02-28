@@ -209,17 +209,12 @@ int main() {
 
     fifo_puts(out, prompt);
 
-    #if 0
-    int16_t ax, ay, az, gx, gy, gz;
-    uint8_t axs[5], ays[5], azs[5], gxs[5], gys[5], gzs[5];
-    #endif 
-
-
-
-
     while (1) {
 
-        #if 0
+        #if MPU6050_GETATTITUDE == 0
+        int16_t ax, ay, az, gx, gy, gz;
+        uint8_t axs[5], ays[5], azs[5], gxs[5], gys[5], gzs[5];
+
         mpu6050_get_raw_data(&ax, &ay, &az, &gx, &gy, &gz);
 
         int2str_r(ax / 180, axs, 4, 10);
@@ -280,7 +275,6 @@ int main() {
         lcd_printlr(&screen, 0, 6, pitch_str);
         lcd_printlr(&screen, 1, 3, yaw_str);
         lcd_render(&screen);
-
 
         while (fifo_get_token(in, str, MAX_CMD_LEN, '\r') > 0) {
             int8_t ret_code = shell(str, shell_act, sizeof(shell_act) / sizeof(shell_act[0]));
