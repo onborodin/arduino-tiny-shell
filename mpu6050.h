@@ -381,7 +381,7 @@ References:
 /* 1 mahony filter */
 /* 2 dmp chip processor */
 #ifndef MPU6050_GETATTITUDE
-#define MPU6050_GETATTITUDE 2
+#define MPU6050_GETATTITUDE 1
 #endif
 
 /* Definitions for raw data  gyro and acc scale */
@@ -457,19 +457,19 @@ int8_t mpu6050_read_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
 void mpu6050_write_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
 void mpu6050_write_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t data);
 
-#if MPU6050_GETATTITUDE == 1
+
 void mpu6050_update_quaternion(void);
+
+#if MPU6050_GETATTITUDE == 1
 void mpu6050_mahony_update(float gx, float gy, float gz, float ax, float ay, float az);
-void mpu6050_get_quaternion(double *qw, double *qx, double *qy, double *qz);
-void mpu6050_get_roll_pitch_yaw(double *pitch, double *roll, double *yaw);
+#endif
+#if MPU6050_GETATTITUDE == 2
+void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, float az);
 #endif
 
-#if MPU6050_GETATTITUDE == 2
-void mpu6050_update_quaternion(void);
 float inv_sqrt(float x);
-void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, float az);
+
 void mpu6050_get_quaternion(double *qw, double *qx, double *qy, double *qz);
 void mpu6050_get_roll_pitch_yaw(double *roll, double *pitch, double *yaw);
-#endif
 
 #endif
