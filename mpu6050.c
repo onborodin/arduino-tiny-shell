@@ -1,17 +1,13 @@
 
 /*
-MPU6050 lib 0x02
-
-copyright (c) Davide Gironi, 2012
-
-Released under GPLv3.
-Please refer to LICENSE file for licensing information.
-*/
+  Original:MPU6050 lib 0x02, copyright (c) Davide Gironi, 2012
+  Copyright (c) Oleg Borodin, 2018
+  Code updated from http://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+ */
 
 #include <stdlib.h>
 #include <string.h>
 #include <avr/io.h>
-#include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
@@ -130,7 +126,6 @@ void mpu6050_write_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t data) {
     b = (data != 0) ? (b | (1 << bit_num)) : (b & ~(1 << bit_num));
     mpu6050_write_byte(reg_addr, b);
 }
-
 
 /* Set sleep disabled */
 void mpu6050_set_sleep_disabled() {
