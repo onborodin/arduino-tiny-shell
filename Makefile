@@ -14,13 +14,13 @@ CFLAGS+= -I. -Os -DF_CPU=16000000UL -mmcu=atmega328p --std=c99
 #CFLAGS+= -save-temps
 #CFLAGS+= -fno-unwind-tables -fno-asynchronous-unwind-tables
 CFLAGS+= -ffunction-sections -fdata-sections
-CFLAGS+= -MD -MP -MT $(*F).o -MF $(@F).d 
+#CFLAGS+= -MD -MP -MT $(*F).o -MF $(*F).d 
 
 LDFLAGS+= -s -DF_CPU=16000000UL -mmcu=atmega328p -lm
 LDFLAGS+= -Wl,-u,vfprintf -lprintf_flt
 
-main.elf: main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o md5.o adc.o mpu6050.o mpu6050dmp6.o
-	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o adc.o md5.o mpu6050.o mpu6050dmp6.o
+main.elf: main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o md5.o adc.o mpu6050.o
+	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o adc.o md5.o mpu6050.o
 	avr-size --format=berkeley $@
 
 

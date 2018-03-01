@@ -121,6 +121,20 @@ act_t shell_act[] = {
 };
 
 
+
+/* Timer0 */
+void timer0_init(void) {
+    TCCR0B |= (1 << CS02) | (1 << CS00);
+    TIMSK0 |= (1 << TOIE0);
+}
+
+/* Timer 0 */
+ISR(TIMER0_OVF_vect) {
+    #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
+    mpu6050_update_quaternion();
+    #endif
+}
+
 /* Timer1 */
 void timer1_init(void) {
     TCCR1A = 0;
@@ -136,19 +150,6 @@ ISR(TIMER1_OVF_vect) {
 }
 
 
-/* Timer0 */
-void timer0_init(void) {
-    TCCR0B |= (1 << CS02) | (1 << CS00);
-    TIMSK0 |= (1 << TOIE0);
-}
-
-/* Timer 0 */
-ISR(TIMER0_OVF_vect) {
-    #if MPU6050_GETATTITUDE == 1
-    //mpu6050_update_quaternion();
-    #endif
-}
-
 /* INT 0 */
 void int0_init(void) {
     EICRA = (1 << ISC00);
@@ -156,11 +157,7 @@ void int0_init(void) {
     DDRD &= ~(1 << PD2);
 }
 
-
 ISR(INT0_vect) {
-    #if MPU6050_GETATTITUDE == 2
-    mpu6050_mpu_interrupt = 1;
-    #endif
 }
 
 
@@ -182,9 +179,6 @@ int main() {
     wdt_init();
     lcd_init();
     adc_init();
-    timer0_init();
-    //timer1_init();
-    int0_init();
     sei();
     _delay_ms(2000);
 
@@ -192,13 +186,12 @@ int main() {
     uint8_t prompt[] = "READY>";
 
     mpu6050_init();
-
-    #if MPU6050_GETATTITUDE == 2
-    _delay_ms(10);
-    mpu6050_dmp_initialize();
-    mpu6050_dmp_enable();
-    _delay_ms(10);
+    #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
+    timer0_init();
     #endif
+    //timer1_init();
+
+    int0_init();
 
     screen_t screen;
     lcd_clear(&screen);
@@ -229,52 +222,22 @@ int main() {
         //printf("%6d %6d %6d - %6d %6d %6d\r\n", ax/182, ay/182, az/182, gx/10, gy/10, gz/10);
         #endif
 
-        #if MPU6050_GETATTITUDE == 1
+        #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
 
         double roll, pitch, yaw;
         uint8_t roll_str[8], pitch_str[8], yaw_str[8];
 
         mpu6050_get_roll_pitch_yaw(&roll, &pitch, &yaw);
 
-        snprintf(roll_str, 5, "%+4.0f", roll * 57.2958);
-        snprintf(pitch_str, 5, "%+4.0f", pitch * 57.2958);
-        snprintf(yaw_str, 5, "%+4.0f", yaw * 57.2958);
+        snprintf(roll_str, 6, "%+5.0f", roll * 100);
+        snprintf(pitch_str, 6, "%+5.0f", pitch * 100);
+        snprintf(yaw_str, 6, "%+5.0f", yaw * 100);
         lcd_clear(&screen);
-        lcd_printlr(&screen, 0, 0, roll_str);
-        lcd_printlr(&screen, 0, 5, pitch_str);
-        lcd_printlr(&screen, 1, 7, yaw_str);
-        lcd_render(&screen);
-        #endif
-
-        double qw, qx, qy, qz;
-        uint8_t qws[8], qxs[8], qys[8], qzs[8];
-        double roll, pitch, yaw;
-        uint8_t roll_str[8], pitch_str[8], yaw_str[8];
-
-        mpu6050_get_quaternion_wait(&qw, &qx, &qy, &qz);
-        mpu6050_get_roll_pitch_yaw(qw, qx, qy, qz, &roll, &pitch, &yaw);
-
-        //snprintf(qxs, 5, "%+4.0f", qx*100);
-        //snprintf(qys, 5, "%+4.0f", qy*100);
-        //snprintf(qzs, 5, "%+4.0f", qz*100);
-        //snprintf(qws, 5, "%+4.0f", qw*100);
-
-        //lcd_clear(&screen);
-        //lcd_printlr(&screen, 0, 0, qxs);
-        //lcd_printlr(&screen, 0, 5, qys);
-        //lcd_printlr(&screen, 1, 1, qzs);
-        //lcd_printlr(&screen, 1, 8, qws);
-        //lcd_render(&screen);
-
-        snprintf(roll_str, 5, "%+4.0f", roll * 100);
-        snprintf(pitch_str, 5, "%+4.0f", pitch * 100);
-        snprintf(yaw_str, 5, "%+4.0f", yaw * 100);
-
-        lcd_clear(&screen);
-        lcd_printlr(&screen, 0, 0, roll_str);
-        lcd_printlr(&screen, 0, 6, pitch_str);
+        lcd_printlr(&screen, 0, 0, pitch_str);
+        lcd_printlr(&screen, 0, 7, roll_str);
         lcd_printlr(&screen, 1, 3, yaw_str);
         lcd_render(&screen);
+        #endif
 
         while (fifo_get_token(in, str, MAX_CMD_LEN, '\r') > 0) {
             int8_t ret_code = shell(str, shell_act, sizeof(shell_act) / sizeof(shell_act[0]));
