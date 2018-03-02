@@ -226,6 +226,7 @@ void mpu6050_get_conv_data(double *axg, double *ayg, double *azg, double *gxds, 
 
 /*
   Quaternion of sensor frame relative to auxiliary frame:
+
     quaternion_t q = {
         .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
         .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
@@ -248,17 +249,20 @@ void mpu6050_get_conv_data(double *axg, double *ayg, double *azg, double *gxds, 
         TIMSK0 |=(1<<TOIE0);
     }
 
-  Main 
-    main(void) {
+  Main loop
+    int main(void) {
         ...
-        double roll, pitch, yaw;
-        uint8_t roll_str[8], pitch_str[8], yaw_str[8];
+        while(1) {
+            double roll, pitch, yaw;
+            uint8_t roll_str[8], pitch_str[8], yaw_str[8];
+            ...
+            mpu6050_get_roll_pitch_yaw(qn, &roll, &pitch, &yaw);
 
-        mpu6050_get_roll_pitch_yaw(qn, &roll, &pitch, &yaw);
-
-        snprintf(roll_str, 6, "%+5.0f", roll * (240/M_PI)/1.27);
-        snprintf(pitch_str, 6, "%+5.0f", pitch * (240/M_PI)/1.27);
-        snprintf(yaw_str, 6, "%+5.0f", yaw * (240/M_PI)/1.27);
+            snprintf(roll_str, 6, "%+5.0f", roll * 120);
+            snprintf(pitch_str, 6, "%+5.0f", pitch * 120);
+            snprintf(yaw_str, 6, "%+5.0f", yaw * 120);
+            ...
+        }
         ...
     }
  */
