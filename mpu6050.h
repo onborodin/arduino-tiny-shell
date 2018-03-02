@@ -435,6 +435,13 @@
 #define MPU6050_GZGAIN          MPU6050_GGAIN
 #endif
 
+typedef struct quaternion {
+    float q0;
+    float q1;
+    float q2;
+    float q3;
+} quaternion_t;
+
 /* Functions */
 void mpu6050_init(void);
 uint8_t mpu6050_test_connection(void);
@@ -454,19 +461,16 @@ int8_t mpu6050_read_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
 void mpu6050_write_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
 void mpu6050_write_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t data);
 
-
-void mpu6050_update_quaternion(void);
-
-#if MPU6050_GETATTITUDE == 1
-void mpu6050_mahony_update(float gx, float gy, float gz, float ax, float ay, float az);
-#endif
-#if MPU6050_GETATTITUDE == 2
-void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, float az);
-#endif
-
 float inv_sqrt(float x);
 
-void mpu6050_get_quaternion(double *qw, double *qx, double *qy, double *qz);
-void mpu6050_get_roll_pitch_yaw(double *roll, double *pitch, double *yaw);
+void mpu6050_update_quaternion(quaternion_t *qn);
+#if MPU6050_GETATTITUDE == 1
+void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
+#endif
+#if MPU6050_GETATTITUDE == 2
+void mpu6050_madgwick_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
+#endif
+
+void mpu6050_get_roll_pitch_yaw(quaternion_t *qn, double *roll, double *pitch, double *yaw);
 
 #endif

@@ -64,18 +64,18 @@ void mpu6050_write_bytes(uint8_t reg_addr, uint8_t length, uint8_t * data) {
     }
 }
 
-/*  Write 1 byte to chip register */
+/* Write 1 byte to chip register */
 void mpu6050_write_byte(uint8_t reg_addr, uint8_t data) {
     return mpu6050_write_bytes(reg_addr, 1, &data);
 }
 
 /* Read bits from chip register */
 int8_t mpu6050_read_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data) {
-    /*  01101001 read byte */
-    /*  76543210 bit numbers */
-    /*     xxx   args: bit_start=4, length=3 */
-    /*     010   masked */
-    /*    -> 010 shifted */
+    /* 01101001 read byte */
+    /* 76543210 bit numbers */
+    /*    xxx   args: bit_start=4, length=3 */
+    /*    010   masked */
+    /*   -> 010 shifted */
     int8_t count = 0;
     if (length > 0) {
         uint8_t b;
@@ -99,21 +99,21 @@ int8_t mpu6050_read_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t * data) {
 
 /* Write bit/bits to chip register */
 void mpu6050_write_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data) {
-    /*       010 value to write */
-    /*  76543210 bit numbers */
-    /*     xxx   args: bit_start=4, length=3 */
-    /*  00011100 mask byte */
-    /*  10101111 original value (sample) */
-    /*  10100011 original & ~mask */
-    /*  10101011 masked | value */
+    /*      010 value to write */
+    /* 76543210 bit numbers */
+    /*    xxx   args: bit_start=4, length=3 */
+    /* 00011100 mask byte */
+    /* 10101111 original value (sample) */
+    /* 10100011 original & ~mask */
+    /* 10101011 masked | value */
     if (length > 0) {
         uint8_t b = 0;
         if (mpu6050_read_byte(reg_addr, &b) != 0) {     /* get current data */
             uint8_t mask = ((1 << length) - 1) << (bit_start - length + 1);
-            data <<= (bit_start - length + 1);  /*  shift data into correct position */
-            data &= mask;       /*  zero all non-important bits in data */
-            b &= ~(mask);       /*  zero all important bits in existing byte */
-            b |= data;          /*  combine data with existing byte */
+            data <<= (bit_start - length + 1);  /* shift data into correct position */
+            data &= mask;       /* zero all non-important bits in data */
+            b &= ~(mask);       /* zero all important bits in existing byte */
+            b |= data;          /* combine data with existing byte */
             mpu6050_write_byte(reg_addr, b);
         }
     }
@@ -225,25 +225,43 @@ void mpu6050_get_conv_data(double *axg, double *ayg, double *azg, double *gxds, 
 
 
 /*
-  Update timer for attitude
+  Quaternion of sensor frame relative to auxiliary frame:
+    quaternion_t q = { .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f }; 
+    quaternion_t *qn = &q;
 
-  ISR(TIMER0_OVF_vect) {
-      mpu6050_update_quaternion();
-  }
+  Update timer for attitude:
+    ISR(TIMER0_OVF_vect) {
+        mpu6050_update_quaternion(qn);
+    }
 
   Setup timer0 overflow event and define madgwickAHRSsampleFreq equal to timer0 frequency
   timerfreq = (FCPU / prescaler) / timerscale
        timerscale 8-bit = 256
   es. 61 = (16000000 / 1024) / 256
 
-  void timer_init(void) {
-      TCCR0B |=(1<<CS02)|(1<<CS00);
-      TIMSK0 |=(1<<TOIE0);
-  }
+    void timer_init(void) {
+        TCCR0B |=(1<<CS02)|(1<<CS00);
+        TIMSK0 |=(1<<TOIE0);
+    }
+
+  Main 
+    main(void) {
+        ...
+        double roll, pitch, yaw;
+        uint8_t roll_str[8], pitch_str[8], yaw_str[8];
+
+        mpu6050_get_roll_pitch_yaw(qn, &roll, &pitch, &yaw);
+
+        snprintf(roll_str, 6, "%+5.0f", roll * (240/M_PI)/1.27);
+        snprintf(pitch_str, 6, "%+5.0f", pitch * (240/M_PI)/1.27);
+        snprintf(yaw_str, 6, "%+5.0f", yaw * (240/M_PI)/1.27);
+        ...
+    }
  */
 
+
 /* Update quaternion */
-void mpu6050_update_quaternion(void) {
+void mpu6050_update_quaternion(quaternion_t *qn) {
     int16_t ax = 0;
     int16_t ay = 0;
     int16_t az = 0;
@@ -299,113 +317,114 @@ void mpu6050_update_quaternion(void) {
 
     /* Compute data */
 #if MPU6050_GETATTITUDE == 1
-    mpu6050_mahony_update(gxrs, gyrs, gzrs, axg, ayg, azg);
+    mpu6050_mahony_update(qn, gxrs, gyrs, gzrs, axg, ayg, azg);
 #endif
 #if MPU6050_GETATTITUDE == 2
-    mpu6050_madgwick_update(gxrs, gyrs, gzrs, axg, ayg, azg);
+    mpu6050_madgwick_update(qn, gxrs, gyrs, gzrs, axg, ayg, azg);
 #endif
 }
 
 
 #if MPU6050_GETATTITUDE == 1
 
-#define MPU6050_MAHONY_SAMPLE_FREQ	61.0f  /*  sample frequency in Hz */
-#define MPU6050_MAHONY_TWO_KP_DEF	(2.0f * 0.5f)   /*  2 * proportional gain */
-#define MPU6050_MAHONY_TWO_KI_DEF	(2.0f * 0.0f)   /*  2 * integral gain */
+#define MPU6050_MAHONY_SAMPLE_FREQ	61.0f  /* sample frequency in Hz */
+#define MPU6050_MAHONY_TWO_KP_DEF	(2.0f * 0.5f)   /* 2 * proportional gain */
+#define MPU6050_MAHONY_TWO_KI_DEF	(2.0f * 0.0f)   /* 2 * integral gain */
 
-/*  Variable definitions */
-volatile float twoKp = MPU6050_MAHONY_TWO_KP_DEF;        /*  2 * proportional gain (Kp) */
-volatile float twoKi = MPU6050_MAHONY_TWO_KI_DEF;        /*  2 * integral gain (Ki) */
-volatile float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;      /*  quaternion of sensor frame relative to auxiliary frame */
-volatile float integralFBx = 0.0f, integralFBy = 0.0f, integralFBz = 0.0f;      /*  integral error terms scaled by Ki */
+volatile float integralFBx = 0.0f, integralFBy = 0.0f, integralFBz = 0.0f;      /* integral error terms scaled by Ki */
 
-/*  IMU algorithm update */
-void mpu6050_mahony_update(float gx, float gy, float gz, float ax, float ay, float az) {
+/* IMU algorithm update */
+void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
+
+    volatile float twoKp = MPU6050_MAHONY_TWO_KP_DEF;        /* 2 * proportional gain (Kp) */
+    volatile float twoKi = MPU6050_MAHONY_TWO_KI_DEF;        /* 2 * integral gain (Ki) */
+
     float recipNorm;
     float halfvx, halfvy, halfvz;
     float halfex, halfey, halfez;
     float qa, qb, qc;
 
-    /*  Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation) */
+    /* Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation) */
     if (!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
 
-        /*  Normalise accelerometer measurement */
+        /* Normalise accelerometer measurement */
         recipNorm = inv_sqrt(ax * ax + ay * ay + az * az);
         ax *= recipNorm;
         ay *= recipNorm;
         az *= recipNorm;
 
-        /*  Estimated direction of gravity and vector perpendicular to magnetic flux */
-        halfvx = q1 * q3 - q0 * q2;
-        halfvy = q0 * q1 + q2 * q3;
-        halfvz = q0 * q0 - 0.5f + q3 * q3;
+        /* Estimated direction of gravity and vector perpendicular to magnetic flux */
+        halfvx = qn->q1 * qn->q3 - qn->q0 * qn->q2;
+        halfvy = qn->q0 * qn->q1 + qn->q2 * qn->q3;
+        halfvz = qn->q0 * qn->q0 - 0.5f + qn->q3 * qn->q3;
 
-        /*  Error is sum of cross product between estimated and measured direction of gravity */
+        /* Error is sum of cross product between estimated and measured direction of gravity */
         halfex = (ay * halfvz - az * halfvy);
         halfey = (az * halfvx - ax * halfvz);
         halfez = (ax * halfvy - ay * halfvx);
 
-        /*  Compute and apply integral feedback if enabled */
+        /* Compute and apply integral feedback if enabled */
         if (twoKi > 0.0f) {
-            integralFBx += twoKi * halfex * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);        /*  integral error scaled by Ki */
+            integralFBx += twoKi * halfex * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ); /* integral error scaled by Ki */
             integralFBy += twoKi * halfey * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
             integralFBz += twoKi * halfez * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
-            gx += integralFBx;  /*  apply integral feedback */
+            gx += integralFBx; /* apply integral feedback */
             gy += integralFBy;
             gz += integralFBz;
         } else {
-            integralFBx = 0.0f; /*  prevent integral windup */
+            integralFBx = 0.0f; /* prevent integral windup */
             integralFBy = 0.0f;
             integralFBz = 0.0f;
         }
 
-        /*  Apply proportional feedback */
+        /* Apply proportional feedback */
         gx += twoKp * halfex;
         gy += twoKp * halfey;
         gz += twoKp * halfez;
     }
-    /*  Integrate rate of change of quaternion */
-    gx *= (0.5f * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ)); /*  pre-multiply common factors */
+    /* Integrate rate of change of quaternion */
+    gx *= (0.5f * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ)); /* pre-multiply common factors */
     gy *= (0.5f * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ));
     gz *= (0.5f * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ));
-    qa = q0;
-    qb = q1;
-    qc = q2;
-    q0 += (-qb * gx - qc * gy - q3 * gz);
-    q1 += (qa * gx + qc * gz - q3 * gy);
-    q2 += (qa * gy - qb * gz + q3 * gx);
-    q3 += (qa * gz + qb * gy - qc * gx);
 
-    /*  Normalise quaternion */
-    recipNorm = inv_sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-    q0 *= recipNorm;
-    q1 *= recipNorm;
-    q2 *= recipNorm;
-    q3 *= recipNorm;
+    qa = qn->q0;
+    qb = qn->q1;
+    qc = qn->q2;
+
+    qn->q0 += (-qb * gx - qc * gy - qn->q3 * gz);
+    qn->q1 += (qa * gx + qc * gz - qn->q3 * gy);
+    qn->q2 += (qa * gy - qb * gz + qn->q3 * gx);
+    qn->q3 += (qa * gz + qb * gy - qc * gx);
+
+    /* Normalise quaternion */
+    recipNorm = inv_sqrt(qn->q0*qn->q0 + qn->q1*qn->q1 + qn->q2*qn->q2 + qn->q3*qn->q3);
+    qn->q0 *= recipNorm;
+    qn->q1 *= recipNorm;
+    qn->q2 *= recipNorm;
+    qn->q3 *= recipNorm;
 }
 #endif                          /* MPU6050_GETATTITUDE == 1 */
 
 #if MPU6050_GETATTITUDE == 2
 
-#define MPU6050_MADGWIK_SAMPLE_FREQ	61.0f   /*  Sample frequency in Hz */
-#define MPU6050_MADGWIK_BETA_DEF	0.1f    /*  2 * proportional gain */
-
-/*  Variable definitions */
-volatile float beta = MPU6050_MADGWIK_BETA_DEF; /*  2 * proportional gain (Kp) */
-volatile float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;      /*  quaternion of sensor frame relative to auxiliary frame */
+#define MPU6050_MADGWIK_SAMPLE_FREQ	61.0f   /* Sample frequency in Hz */
+#define MPU6050_MADGWIK_BETA_DEF	0.1f    /* 2 * proportional gain */
 
 /* IMU algorithm update */
-void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, float az) {
+void mpu6050_madgwick_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
+
+    float beta = MPU6050_MADGWIK_BETA_DEF; /* 2 * proportional gain (Kp) */
+
     float recipNorm;
     float s0, s1, s2, s3;
     float qDot1, qDot2, qDot3, qDot4;
     float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2, _8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
 
     /*  Rate of change of quaternion from gyroscope */
-    qDot1 = 0.5f * (-q1 * gx - q2 * gy - q3 * gz);
-    qDot2 = 0.5f * (q0 * gx + q2 * gz - q3 * gy);
-    qDot3 = 0.5f * (q0 * gy - q1 * gz + q3 * gx);
-    qDot4 = 0.5f * (q0 * gz + q1 * gy - q2 * gx);
+    qDot1 = 0.5f * (-(qn->q1) * gx - qn->q2 * gy - qn->q3 * gz);
+    qDot2 = 0.5f * (qn->q0 * gx + qn->q2 * gz - qn->q3 * gy);
+    qDot3 = 0.5f * (qn->q0 * gy - qn->q1 * gz + qn->q3 * gx);
+    qDot4 = 0.5f * (qn->q0 * gz + qn->q1 * gy - qn->q2 * gx);
 
     /*  Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation) */
     if (!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
@@ -417,26 +436,28 @@ void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, f
         az *= recipNorm;
 
         /* Auxiliary variables to avoid repeated arithmetic */
-        _2q0 = 2.0f * q0;
-        _2q1 = 2.0f * q1;
-        _2q2 = 2.0f * q2;
-        _2q3 = 2.0f * q3;
-        _4q0 = 4.0f * q0;
-        _4q1 = 4.0f * q1;
-        _4q2 = 4.0f * q2;
-        _8q1 = 8.0f * q1;
-        _8q2 = 8.0f * q2;
-        q0q0 = q0 * q0;
-        q1q1 = q1 * q1;
-        q2q2 = q2 * q2;
-        q3q3 = q3 * q3;
+        _2q0 = 2.0f * qn->q0;
+        _2q1 = 2.0f * qn->q1;
+        _2q2 = 2.0f * qn->q2;
+        _2q3 = 2.0f * qn->q3;
+        _4q0 = 4.0f * qn->q0;
+        _4q1 = 4.0f * qn->q1;
+        _4q2 = 4.0f * qn->q2;
+        _8q1 = 8.0f * qn->q1;
+        _8q2 = 8.0f * qn->q2;
+        q0q0 = qn->q0 * qn->q0;
+        q1q1 = qn->q1 * qn->q1;
+        q2q2 = qn->q2 * qn->q2;
+        q3q3 = qn->q3 * qn->q3;
 
         /* Gradient decent algorithm corrective step */
         s0 = _4q0 * q2q2 + _2q2 * ax + _4q0 * q1q1 - _2q1 * ay;
-        s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
-        s2 = 4.0f * q0q0 * q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
-        s3 = 4.0f * q1q1 * q3 - _2q1 * ax + 4.0f * q2q2 * q3 - _2q2 * ay;
-        recipNorm = inv_sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3);    /*  Normalise step magnitude */
+        s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * qn->q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
+        s2 = 4.0f * q0q0 * qn->q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
+        s3 = 4.0f * q1q1 * qn->q3 - _2q1 * ax + 4.0f * q2q2 * qn->q3 - _2q2 * ay;
+
+        recipNorm = inv_sqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); /*  Normalise step magnitude */
+
         s0 *= recipNorm;
         s1 *= recipNorm;
         s2 *= recipNorm;
@@ -449,29 +470,19 @@ void mpu6050_madgwick_update(float gx, float gy, float gz, float ax, float ay, f
         qDot4 -= beta * s3;
     }
     /* Integrate rate of change of quaternion to yield quaternion */
-    q0 += qDot1 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
-    q1 += qDot2 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
-    q2 += qDot3 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
-    q3 += qDot4 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
+    qn->q0 += qDot1 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
+    qn->q1 += qDot2 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
+    qn->q2 += qDot3 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
+    qn->q3 += qDot4 * (1.0f / MPU6050_MADGWIK_SAMPLE_FREQ);
 
     /* Normalise quaternion */
-    recipNorm = inv_sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-    q0 *= recipNorm;
-    q1 *= recipNorm;
-    q2 *= recipNorm;
-    q3 *= recipNorm;
+    recipNorm = inv_sqrt(qn->q0 * qn->q0 + qn->q1 * qn->q1 + qn->q2 * qn->q2 + qn->q3 * qn->q3);
+    qn->q0 *= recipNorm;
+    qn->q1 *= recipNorm;
+    qn->q2 *= recipNorm;
+    qn->q3 *= recipNorm;
 }
-
 #endif                          /* MPU6050_GETATTITUDE == 2 */
-
-
-/* Get quaternion */
-void mpu6050_get_quaternion(double *qw, double *qx, double *qy, double *qz) {
-    *qw = q0;
-    *qx = q1;
-    *qy = q2;
-    *qz = q3;
-}
 
 /* Fast inverse square-root */
 float inv_sqrt(float x) {
@@ -490,28 +501,23 @@ float inv_sqrt(float x) {
  * 2. Rotate around sensor Y plane by pitch
  * 3. Rotate around sensor X plane by roll
  */
-#define qw q0
-#define qx q1
-#define qy q2
-#define qz q3
 
-void mpu6050_get_roll_pitch_yaw(double *roll, double *pitch, double *yaw) {
-    /*  roll (x-axis rotation) */
-    double sinr = 2.0 * (qw * qx + qy * qz);
-    double cosr = 1.0 - 2.0 * (qx * qx + qy * qy);
+void mpu6050_get_roll_pitch_yaw(quaternion_t *qn, double *roll, double *pitch, double *yaw) {
+    /* roll (x-axis rotation) */
+    double sinr = 2.0 * (qn->q0 * qn->q1 + qn->q2 * qn->q3);
+    double cosr = 1.0 - 2.0 * (qn->q1 * qn->q1 + qn->q2 * qn->q2);
     *roll = atan2(sinr, cosr);
 
-    /*  pitch (y-axis rotation) */
-    double sinp = 2.0 * (qw * qy - qz * qx);
+    /* pitch (y-axis rotation) */
+    double sinp = 2.0 * (qn->q0 * qn->q2 - qn->q3 * qn->q1);
     if (fabs(sinp) >= 1)
-        *pitch = copysign(M_PI / 2, sinp);      /*  use 90 degrees if out of range */
+        *pitch = copysign(M_PI / 2, sinp);
     else
         *pitch = asin(sinp);
 
-    /*  yaw (z-axis rotation) */
-    double siny = 2.0 * (qw * qz + qx * qy);
-    double cosy = 1.0 - 2.0 * (qy * qy + qz * qz);
+    /* yaw (z-axis rotation) */
+    double siny = 2.0 * (qn->q0 * qn->q3 + qn->q1 * qn->q2);
+    double cosy = 1.0 - 2.0 * (qn->q2 * qn->q2 + qn->q3 * qn->q3);
     *yaw = atan2(siny, cosy);
 }
-
 /* EOF */

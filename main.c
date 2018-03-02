@@ -127,10 +127,15 @@ void timer0_init(void) {
     TIMSK0 |= (1 << TOIE0);
 }
 
+
+quaternion_t q = { .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f }; /* quaternion of sensor frame relative to auxiliary frame */
+quaternion_t *qn = &q;
+
+
 /* Timer 0 */
 ISR(TIMER0_OVF_vect) {
     #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
-    mpu6050_update_quaternion();
+    mpu6050_update_quaternion(qn);
     #endif
 }
 
@@ -226,7 +231,7 @@ int main() {
         double roll, pitch, yaw;
         uint8_t roll_str[8], pitch_str[8], yaw_str[8];
 
-        mpu6050_get_roll_pitch_yaw(&roll, &pitch, &yaw);
+        mpu6050_get_roll_pitch_yaw(qn, &roll, &pitch, &yaw);
 
         snprintf(roll_str, 6, "%+5.0f", roll * (240/M_PI)/1.27);
         snprintf(pitch_str, 6, "%+5.0f", pitch * (240/M_PI)/1.27);

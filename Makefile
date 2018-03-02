@@ -20,22 +20,16 @@ LDFLAGS+= -s -DF_CPU=16000000UL -mmcu=atmega328p -lm
 LDFLAGS+= -Wl,-u,vfprintf -lprintf_flt
 
 main.elf: main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o md5.o adc.o mpu6050.o
-	avr-gcc $(LDFLAGS) -o $@ main.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o adc.o md5.o mpu6050.o
+	avr-gcc $(LDFLAGS) -o $@ $(^F)
 	avr-size --format=berkeley $@
 
 
 twiscan.elf: twiscan.o fifo.o tools.o shell.o  twim.o ds1307.o i2clcd.o
-	avr-gcc $(LDFLAGS) -o $@ twiscan.o fifo.o tools.o shell.o twim.o ds1307.o i2clcd.o
+	avr-gcc $(LDFLAGS) -o $@ $(^F)
 	avr-size --format=berkeley $@
-
-
-lcd.elf: roboarm.o i2clcd.o
-	avr-gcc $(LDFLAGS) -o $@ roboarm.o twim.o
-	avr-size --format=berkeley $@
-
 
 roboarm.elf: roboarm.o 
-	avr-gcc $(LDFLAGS) -o $@ roboarm.o 
+	avr-gcc $(LDFLAGS) -o $@ $(^F)
 	avr-size --format=berkeley $@
 
 %.o: %.c
