@@ -228,9 +228,9 @@ int main() {
 
         mpu6050_get_roll_pitch_yaw(&roll, &pitch, &yaw);
 
-        snprintf(roll_str, 6, "%+5.0f", roll * 100);
-        snprintf(pitch_str, 6, "%+5.0f", pitch * 100);
-        snprintf(yaw_str, 6, "%+5.0f", yaw * 100);
+        snprintf(roll_str, 6, "%+5.0f", roll * (240/M_PI)/1.27);
+        snprintf(pitch_str, 6, "%+5.0f", pitch * (240/M_PI)/1.27);
+        snprintf(yaw_str, 6, "%+5.0f", yaw * (240/M_PI)/1.27);
         lcd_clear(&screen);
         lcd_printlr(&screen, 0, 0, pitch_str);
         lcd_printlr(&screen, 0, 7, roll_str);

@@ -138,8 +138,8 @@
 
 #define MPU6050_CFG_EXT_SYNC_SET_BIT    5
 #define MPU6050_CFG_EXT_SYNC_SET_LENGTH 3
-#define MPU6050_CFG_DLPF_CFG_BIT    2
-#define MPU6050_CFG_DLPF_CFG_LENGTH 3
+#define MPU6050_CFG_DLPF_CFG_BIT        2
+#define MPU6050_CFG_DLPF_CFG_LENGTH     3
 
 #define MPU6050_EXT_SYNC_DISABLED       0x0
 #define MPU6050_EXT_SYNC_TEMP_OUT_L     0x1
@@ -381,7 +381,7 @@
 #define MPU6050_GETATTITUDE 1
 #endif
 
-/* Definitions for raw data  gyro and acc scale */
+/* Definitions for raw data gyro and acc scale */
 #define MPU6050_GYRO_FS         MPU6050_GYRO_FS_2000
 #define MPU6050_ACCEL_FS        MPU6050_ACCEL_FS_2
 
@@ -415,24 +415,24 @@
 #define MPU6050_AGAIN MPU6050_ACCEL_LSB_16
 #endif
 
-#define MPU6050_CALIBRATEDACCGYRO 0     /* Set to 1 if is calibrated */
+#define MPU6050_CALIBRATEDACCGYRO 1  /* Set to 1 if module is calibrated */
 
 #if MPU6050_CALIBRATEDACCGYRO == 1
 #define MPU6050_AXOFFSET        0
 #define MPU6050_AYOFFSET        0
 #define MPU6050_AZOFFSET        0
 
-#define MPU6050_AXGAIN          16384.0
-#define MPU6050_AYGAIN          16384.0
-#define MPU6050_AZGAIN          16384.0
+#define MPU6050_AXGAIN          MPU6050_AGAIN
+#define MPU6050_AYGAIN          MPU6050_AGAIN
+#define MPU6050_AZGAIN          MPU6050_AGAIN
 
-#define MPU6050_GXOFFSET        -42
-#define MPU6050_GYOFFSET        9
-#define MPU6050_GZOFFSET        -29
+#define MPU6050_GXOFFSET        0
+#define MPU6050_GYOFFSET        0
+#define MPU6050_GZOFFSET        -72
 
-#define MPU6050_GXGAIN          16.4
-#define MPU6050_GYGAIN          16.4
-#define MPU6050_GZGAIN          16.4
+#define MPU6050_GXGAIN          MPU6050_GGAIN
+#define MPU6050_GYGAIN          MPU6050_GGAIN
+#define MPU6050_GZGAIN          MPU6050_GGAIN
 #endif
 
 /* Functions */
