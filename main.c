@@ -128,7 +128,17 @@ void timer0_init(void) {
 }
 
 
-quaternion_t q = { .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f }; /* quaternion of sensor frame relative to auxiliary frame */
+quaternion_t q = { 
+    #if MPU6050_GETATTITUDE == 1
+    .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
+    .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
+    #endif
+    #if MPU6050_GETATTITUDE == 2
+    .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f
+    #endif
+}; /* quaternion of sensor frame relative to auxiliary frame */
+
+
 quaternion_t *qn = &q;
 
 

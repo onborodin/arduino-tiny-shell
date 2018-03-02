@@ -440,6 +440,11 @@ typedef struct quaternion {
     float q1;
     float q2;
     float q3;
+#if MPU6050_GETATTITUDE == 1
+    float integralFBx;
+    float integralFBy;
+    float integralFBz;
+#endif
 } quaternion_t;
 
 /* Functions */

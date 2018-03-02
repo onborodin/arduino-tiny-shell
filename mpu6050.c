@@ -226,7 +226,11 @@ void mpu6050_get_conv_data(double *axg, double *ayg, double *azg, double *gxds, 
 
 /*
   Quaternion of sensor frame relative to auxiliary frame:
-    quaternion_t q = { .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f }; 
+    quaternion_t q = {
+        .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
+        .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
+    };
+
     quaternion_t *qn = &q;
 
   Update timer for attitude:
@@ -324,14 +328,11 @@ void mpu6050_update_quaternion(quaternion_t *qn) {
 #endif
 }
 
-
 #if MPU6050_GETATTITUDE == 1
 
 #define MPU6050_MAHONY_SAMPLE_FREQ	61.0f  /* sample frequency in Hz */
 #define MPU6050_MAHONY_TWO_KP_DEF	(2.0f * 0.5f)   /* 2 * proportional gain */
 #define MPU6050_MAHONY_TWO_KI_DEF	(2.0f * 0.0f)   /* 2 * integral gain */
-
-volatile float integralFBx = 0.0f, integralFBy = 0.0f, integralFBz = 0.0f;      /* integral error terms scaled by Ki */
 
 /* IMU algorithm update */
 void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
@@ -365,16 +366,16 @@ void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float
 
         /* Compute and apply integral feedback if enabled */
         if (twoKi > 0.0f) {
-            integralFBx += twoKi * halfex * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ); /* integral error scaled by Ki */
-            integralFBy += twoKi * halfey * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
-            integralFBz += twoKi * halfez * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
-            gx += integralFBx; /* apply integral feedback */
-            gy += integralFBy;
-            gz += integralFBz;
+            qn->integralFBx += twoKi * halfex * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ); /* integral error scaled by Ki */
+            qn->integralFBy += twoKi * halfey * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
+            qn->integralFBz += twoKi * halfez * (1.0f / MPU6050_MAHONY_SAMPLE_FREQ);
+            gx += qn->integralFBx; /* apply integral feedback */
+            gy += qn->integralFBy;
+            gz += qn->integralFBz;
         } else {
-            integralFBx = 0.0f; /* prevent integral windup */
-            integralFBy = 0.0f;
-            integralFBz = 0.0f;
+            qn->integralFBx = 0.0f; /* prevent integral windup */
+            qn->integralFBy = 0.0f;
+            qn->integralFBz = 0.0f;
         }
 
         /* Apply proportional feedback */
@@ -397,7 +398,7 @@ void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float
     qn->q3 += (qa * gz + qb * gy - qc * gx);
 
     /* Normalise quaternion */
-    recipNorm = inv_sqrt(qn->q0*qn->q0 + qn->q1*qn->q1 + qn->q2*qn->q2 + qn->q3*qn->q3);
+    recipNorm = inv_sqrt(qn->q0 * qn->q0 + qn->q1 * qn->q1 + qn->q2 * qn->q2 + qn->q3 * qn->q3);
     qn->q0 *= recipNorm;
     qn->q1 *= recipNorm;
     qn->q2 *= recipNorm;
