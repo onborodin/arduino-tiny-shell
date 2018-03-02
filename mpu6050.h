@@ -428,7 +428,7 @@
 
 #define MPU6050_GXOFFSET        0
 #define MPU6050_GYOFFSET        0
-#define MPU6050_GZOFFSET        -72
+#define MPU6050_GZOFFSET        0
 
 #define MPU6050_GXGAIN          MPU6050_GGAIN
 #define MPU6050_GYGAIN          MPU6050_GGAIN
