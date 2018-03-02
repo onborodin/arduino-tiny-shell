@@ -27,6 +27,15 @@ difficult to add your types. To do this, you need to write the translation
 
 The argument delimiter is a space, the command terminator is a semicolon `;`.
 
+## This repository also contains
+
+- adapted I2C driver code from Peter Fleury <pfleury@gmx.ch>
+- code for lot of 1602 LCD over I2C with own frame buffer and terminal-like scrolling
+- MD5 code for authentification procedures from https://git.cryptolib.org/arm-crypto-lib.git
+- initial driver for RTC DS1307 over I2C
+- sample of I2C slave register machine
+- driver for MPU6050 IMU with Sebastian Madgwick and Robert Mahony algorithms http://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+- some other (SPI, ADC basic sample, etc)
 
 ## Arduino screen
 
