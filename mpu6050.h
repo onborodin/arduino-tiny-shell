@@ -368,9 +368,6 @@
 #define MPU6050_DMP_MEMORY_CHUNK_SIZE   16
 
 
-/* Definitions */
-//#define MPU6050_ADDR (0x68 << 1) /* device address - 0x68 pin low (GND), 0x69 pin high (VCC) */
-
 /* Enable the getattitude functions */
 /* Because we do not have a magnetometer, we have to start the chip always in the same position */
 /* then to obtain your object attitude you have to apply the aerospace sequence */
