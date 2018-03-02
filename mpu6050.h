@@ -369,7 +369,7 @@
 
 
 /* Definitions */
-#define MPU6050_ADDR (0x68 << 1) /* device address - 0x68 pin low (GND), 0x69 pin high (VCC) */
+//#define MPU6050_ADDR (0x68 << 1) /* device address - 0x68 pin low (GND), 0x69 pin high (VCC) */
 
 /* Enable the getattitude functions */
 /* Because we do not have a magnetometer, we have to start the chip always in the same position */
@@ -448,27 +448,27 @@ typedef struct quaternion {
 } quaternion_t;
 
 /* Functions */
-void mpu6050_init(void);
-uint8_t mpu6050_test_connection(void);
+void mpu6050_init(uint8_t mpu_addr);
+uint8_t mpu6050_test_connection(uint8_t mpu_addr);
 
-void mpu6050_get_raw_data(int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz);
-void mpu6050_get_conv_data(double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds);
+void mpu6050_get_raw_data(uint8_t mpu_addr, int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz);
+void mpu6050_get_conv_data(uint8_t mpu_addr, double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds);
 
-void mpu6050_set_sleep_disabled(void);
-void mpu6050_set_sleep_enabled(void);
+void mpu6050_set_sleep_disabled(uint8_t mpu_addr);
+void mpu6050_set_sleep_enabled(uint8_t mpu_addr);
 
-int8_t mpu6050_read_bytes(uint8_t reg_addr, uint8_t length, uint8_t * data);
-int8_t mpu6050_read_byte(uint8_t reg_addr, uint8_t * data);
-void mpu6050_write_bytes(uint8_t reg_addr, uint8_t length, uint8_t * data);
-void mpu6050_write_byte(uint8_t reg_addr, uint8_t data);
-int8_t mpu6050_read_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data);
-int8_t mpu6050_read_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
-void mpu6050_write_bits(uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
-void mpu6050_write_bit(uint8_t reg_addr, uint8_t bit_num, uint8_t data);
+int8_t mpu6050_read_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data);
+int8_t mpu6050_read_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t * data);
+void mpu6050_write_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data);
+void mpu6050_write_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t data);
+int8_t mpu6050_read_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data);
+int8_t mpu6050_read_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
+void mpu6050_write_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
+void mpu6050_write_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t data);
 
 float inv_sqrt(float x);
 
-void mpu6050_update_quaternion(quaternion_t *qn);
+void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn);
 #if MPU6050_GETATTITUDE == 1
 void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
 #endif
