@@ -127,8 +127,8 @@ void timer0_init(void) {
     TIMSK0 |= (1 << TOIE0);
 }
 
-
-quaternion_t qn0 = { 
+mpu6050_t mpu0 = {
+    .addr = 0x68,
     #if MPU6050_GETATTITUDE == 1
     .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
     .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
@@ -138,7 +138,8 @@ quaternion_t qn0 = {
     #endif
 }; /* quaternion of sensor frame relative to auxiliary frame */
 
-quaternion_t qn1 = { 
+mpu6050_t mpu1 = { 
+    .addr = 0x69,
     #if MPU6050_GETATTITUDE == 1
     .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
     .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
@@ -148,16 +149,14 @@ quaternion_t qn1 = {
     #endif
 }; /* quaternion of sensor frame relative to auxiliary frame */
 
-quaternion_t *qnp0 = &qn0;
-quaternion_t *qnp1 = &qn1;
-
-volatile uint8_t mpu_addr0 = 0x68;
-volatile uint8_t mpu_addr1 = 0x69;
+mpu6050_t *mpu0p = &mpu0;
+mpu6050_t *mpu1p = &mpu1;
 
 /* Timer 0 */
 ISR(TIMER0_OVF_vect) {
     #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
-    mpu6050_update_quaternion(mpu_addr0, qnp0);
+    mpu6050_update_quaternion(mpu0p);
+    mpu6050_update_quaternion(mpu1p);
     #endif
 }
 
@@ -211,7 +210,8 @@ int main() {
     uint8_t str[MAX_CMD_LEN];
     uint8_t prompt[] = "READY>";
 
-    mpu6050_init(mpu_addr0);
+    mpu6050_init(mpu0p);
+    mpu6050_init(mpu1p);
     #if MPU6050_GETATTITUDE == 1 || MPU6050_GETATTITUDE == 2
     timer0_init();
     #endif
@@ -234,7 +234,7 @@ int main() {
         int16_t ax, ay, az, gx, gy, gz;
         uint8_t axs[5], ays[5], azs[5], gxs[5], gys[5], gzs[5];
 
-        mpu6050_get_raw_data(mpu_addr0, &ax, &ay, &az, &gx, &gy, &gz);
+        mpu6050_get_raw_data(mpu0p, &ax, &ay, &az, &gx, &gy, &gz);
 
         int2str_r(ax / 180, axs, 4, 10);
         int2str_r(ay / 180, ays, 4, 10);
@@ -252,17 +252,22 @@ int main() {
 
         double roll0, pitch0, yaw0;
         uint8_t roll0_str[8], pitch0_str[8], yaw0_str[8];
-
-        mpu6050_get_roll_pitch_yaw(qnp0, &roll0, &pitch0, &yaw0);
-
+        mpu6050_get_roll_pitch_yaw(mpu0p, &roll0, &pitch0, &yaw0);
         snprintf(roll0_str, 6, "%+5.0f", roll0 * 100);
         snprintf(pitch0_str, 6, "%+5.0f", pitch0 * 100);
-        snprintf(yaw0_str, 6, "%+5.0f", yaw0 * 100);
-
         lcd_clear(&screen);
         lcd_printlr(&screen, 0, 0, pitch0_str);
         lcd_printlr(&screen, 0, 7, roll0_str);
-        lcd_printlr(&screen, 1, 3, yaw0_str);
+
+
+        double roll1, pitch1, yaw1;
+        uint8_t roll1_str[8], pitch1_str[8], yaw1_str[8];
+        mpu6050_get_roll_pitch_yaw(mpu1p, &roll1, &pitch1, &yaw1);
+        snprintf(roll1_str, 6, "%+5.0f", roll1 * 100);
+        snprintf(pitch1_str, 6, "%+5.0f", pitch1 * 100);
+        lcd_printlr(&screen, 1, 0, pitch1_str);
+        lcd_printlr(&screen, 1, 7, roll1_str);
+
         lcd_render(&screen);
         #endif
 

@@ -22,17 +22,17 @@
 volatile uint8_t buffer[14];
 
 /* Read bytes from chip register */
-int8_t mpu6050_read_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data) {
+int8_t mpu6050_read_bytes(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t length, uint8_t * data) {
     uint8_t i = 0;
     int8_t count = 0;
 
     if (length > 0) {
         /* Request register */
-        i2c_start((mpu_addr << 1) | I2C_WRITE);
+        i2c_start((mpu6050->addr << 1) | I2C_WRITE);
         i2c_write(reg_addr);
         _delay_us(10);
         /* Read data */
-        i2c_start((mpu_addr << 1) | I2C_READ);
+        i2c_start((mpu6050->addr << 1) | I2C_READ);
         for (i = 0; i < length; i++) {
             count++;
             if (i == length - 1)
@@ -46,15 +46,15 @@ int8_t mpu6050_read_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, ui
 }
 
 /* Read 1 byte from chip register */
-int8_t mpu6050_read_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t * data) {
-    return mpu6050_read_bytes(mpu_addr, reg_addr, 1, data);
+int8_t mpu6050_read_byte(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t * data) {
+    return mpu6050_read_bytes(mpu6050, reg_addr, 1, data);
 }
 
 /* Write bytes to chip register */
-void mpu6050_write_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data) {
+void mpu6050_write_bytes(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t length, uint8_t * data) {
     if (length > 0) {
         /* Write data */
-        i2c_start((mpu_addr << 1) | I2C_WRITE);
+        i2c_start((mpu6050->addr << 1) | I2C_WRITE);
         i2c_write(reg_addr);
 
         for (uint8_t i = 0; i < length; i++) {
@@ -65,12 +65,12 @@ void mpu6050_write_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uin
 }
 
 /* Write 1 byte to chip register */
-void mpu6050_write_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t data) {
-    return mpu6050_write_bytes(mpu_addr, reg_addr, 1, &data);
+void mpu6050_write_byte(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t data) {
+    return mpu6050_write_bytes(mpu6050, reg_addr, 1, &data);
 }
 
 /* Read bits from chip register */
-int8_t mpu6050_read_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data) {
+int8_t mpu6050_read_bits(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data) {
     /* 01101001 read byte */
     /* 76543210 bit numbers */
     /*    xxx   args: bit_start=4, length=3 */
@@ -79,7 +79,7 @@ int8_t mpu6050_read_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, 
     int8_t count = 0;
     if (length > 0) {
         uint8_t b;
-        if ((count = mpu6050_read_byte(mpu_addr, reg_addr, &b)) != 0) {
+        if ((count = mpu6050_read_byte(mpu6050, reg_addr, &b)) != 0) {
             uint8_t mask = ((1 << length) - 1) << (bit_start - length + 1);
             b &= mask;
             b >>= (bit_start - length + 1);
@@ -90,15 +90,15 @@ int8_t mpu6050_read_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, 
 }
 
 /* Read 1 bit from chip register */
-int8_t mpu6050_read_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t * data) {
+int8_t mpu6050_read_bit(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t bit_num, uint8_t * data) {
     uint8_t b;
-    uint8_t count = mpu6050_read_byte(mpu_addr, reg_addr, &b);
+    uint8_t count = mpu6050_read_byte(mpu6050, reg_addr, &b);
     *data = b & (1 << bit_num);
     return count;
 }
 
 /* Write bit/bits to chip register */
-void mpu6050_write_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data) {
+void mpu6050_write_bits(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data) {
     /*      010 value to write */
     /* 76543210 bit numbers */
     /*    xxx   args: bit_start=4, length=3 */
@@ -108,40 +108,40 @@ void mpu6050_write_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, u
     /* 10101011 masked | value */
     if (length > 0) {
         uint8_t b = 0;
-        if (mpu6050_read_byte(mpu_addr, reg_addr, &b) != 0) {     /* get current data */
+        if (mpu6050_read_byte(mpu6050, reg_addr, &b) != 0) {     /* get current data */
             uint8_t mask = ((1 << length) - 1) << (bit_start - length + 1);
             data <<= (bit_start - length + 1);  /* shift data into correct position */
             data &= mask;       /* zero all non-important bits in data */
             b &= ~(mask);       /* zero all important bits in existing byte */
             b |= data;          /* combine data with existing byte */
-            mpu6050_write_byte(mpu_addr, reg_addr, b);
+            mpu6050_write_byte(mpu6050, reg_addr, b);
         }
     }
 }
 
 /* Write one bit to chip register */
-void mpu6050_write_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t data) {
+void mpu6050_write_bit(mpu6050_t *mpu6050, uint8_t reg_addr, uint8_t bit_num, uint8_t data) {
     uint8_t b;
-    mpu6050_read_byte(mpu_addr, reg_addr, &b);
+    mpu6050_read_byte(mpu6050, reg_addr, &b);
     b = (data != 0) ? (b | (1 << bit_num)) : (b & ~(1 << bit_num));
-    mpu6050_write_byte(mpu_addr, reg_addr, b);
+    mpu6050_write_byte(mpu6050, reg_addr, b);
 }
 
 /* Set sleep disabled */
-void mpu6050_set_sleep_disabled(uint8_t mpu_addr) {
-    mpu6050_write_bit(mpu_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
+void mpu6050_set_sleep_disabled(mpu6050_t *mpu6050) {
+    mpu6050_write_bit(mpu6050, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
 }
 
 /* Set sleep enabled */
-void mpu6050_set_sleep_enabled(uint8_t mpu_addr) {
-    mpu6050_write_bit(mpu_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
+void mpu6050_set_sleep_enabled(mpu6050_t *mpu6050) {
+    mpu6050_write_bit(mpu6050, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
 }
 
 
 /* Test connectino to chip */
-uint8_t mpu6050_test_connection(uint8_t mpu_addr) {
+uint8_t mpu6050_test_connection(mpu6050_t *mpu6050) {
     volatile uint8_t buffer[1];
-    mpu6050_read_bits(mpu_addr, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, (uint8_t *) buffer);
+    mpu6050_read_bits(mpu6050, MPU6050_RA_WHO_AM_I, MPU6050_WHO_AM_I_BIT, MPU6050_WHO_AM_I_LENGTH, (uint8_t *) buffer);
     if (buffer[0] == 0x34)
         return 1;
     else
@@ -149,13 +149,13 @@ uint8_t mpu6050_test_connection(uint8_t mpu_addr) {
 }
 
 /* Initialize the accel and gyro */
-void mpu6050_init(uint8_t mpu_addr) {
+void mpu6050_init(mpu6050_t *mpu6050) {
 
     /* Allow mpu6050 chip clocks to start up */
     _delay_ms(100);
 
     /* Aet sleep disabled */
-    mpu6050_set_sleep_disabled(mpu_addr);
+    mpu6050_set_sleep_disabled(mpu6050);
     /* Wake up delay needed sleep disabled */
     _delay_ms(10);
 
@@ -164,15 +164,15 @@ void mpu6050_init(uint8_t mpu_addr) {
        It is highly recommended that the device be configured to use one of the gyroscopes (or an external clock source)
        as the clock reference for improved stability
      */
-    mpu6050_write_bits(mpu_addr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, MPU6050_CLOCK_PLL_XGYRO);
+    mpu6050_write_bits(mpu6050, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT, MPU6050_PWR1_CLKSEL_LENGTH, MPU6050_CLOCK_PLL_XGYRO);
     /* Set DLPF bandwidth to 42Hz */
-    mpu6050_write_bits(mpu_addr, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, MPU6050_DLPF_BW_42);
+    mpu6050_write_bits(mpu6050, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, MPU6050_DLPF_BW_42);
     /* Set sampe rate */
-    mpu6050_write_byte(mpu_addr, MPU6050_RA_SMPLRT_DIV, 4);       /* 1khz / (1 + 4) = 200Hz */
+    mpu6050_write_byte(mpu6050, MPU6050_RA_SMPLRT_DIV, 4);       /* 1khz / (1 + 4) = 200Hz */
     /* Set gyro range */
-    mpu6050_write_bits(mpu_addr, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, MPU6050_GYRO_FS);
+    mpu6050_write_bits(mpu6050, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT, MPU6050_GCONFIG_FS_SEL_LENGTH, MPU6050_GYRO_FS);
     /* Set accel range */
-    mpu6050_write_bits(mpu_addr, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS);
+    mpu6050_write_bits(mpu6050, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT, MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS);
 
 #if MPU6050_GETATTITUDE == 1
     /* MPU6050_TIMER0INIT */
@@ -182,9 +182,9 @@ void mpu6050_init(uint8_t mpu_addr) {
 /* Can not accept many request if we alreay have getattitude requests */
 
 /* Get raw data */
-void mpu6050_get_raw_data(uint8_t mpu_addr, int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz) {
+void mpu6050_get_raw_data(mpu6050_t *mpu6050, int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz) {
     volatile uint8_t buffer[14];
-    mpu6050_read_bytes(mpu_addr, MPU6050_RA_ACCEL_XOUT_H, 14, (uint8_t *) buffer);
+    mpu6050_read_bytes(mpu6050, MPU6050_RA_ACCEL_XOUT_H, 14, (uint8_t *) buffer);
 
     *ax = (((int16_t) buffer[0]) << 8) | buffer[1];
     *ay = (((int16_t) buffer[2]) << 8) | buffer[3];
@@ -195,14 +195,14 @@ void mpu6050_get_raw_data(uint8_t mpu_addr, int16_t * ax, int16_t * ay, int16_t 
 }
 
 /* Get raw data converted to g and deg/sec values */
-void mpu6050_get_conv_data(uint8_t mpu_addr, double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds) {
+void mpu6050_get_conv_data(mpu6050_t *mpu6050, double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds) {
     int16_t ax = 0;
     int16_t ay = 0;
     int16_t az = 0;
     int16_t gx = 0;
     int16_t gy = 0;
     int16_t gz = 0;
-    mpu6050_get_raw_data(mpu_addr, &ax, &ay, &az, &gx, &gy, &gz);
+    mpu6050_get_raw_data(mpu6050, &ax, &ay, &az, &gx, &gy, &gz);
 
 #if MPU6050_CALIBRATEDACCGYRO == 1
     *axg = (double)(ax - MPU6050_AXOFFSET) / MPU6050_AXGAIN;
@@ -227,12 +227,12 @@ void mpu6050_get_conv_data(uint8_t mpu_addr, double *axg, double *ayg, double *a
 /*
   Quaternion of sensor frame relative to auxiliary frame:
 
-    quaternion_t q = {
+    mpu6050_t q = {
         .q0 = 1.0f, .q1 = 0.0f, .q2 = 0.0f, .q3 = 0.0f,
         .integralFBx = 0.0f, .integralFBy = 0.0f, .integralFBz = 0.0f
     };
 
-    quaternion_t *qn = &q;
+    mpu6050_t *qn = &q;
 
   Update timer for attitude:
     ISR(TIMER0_OVF_vect) {
@@ -269,7 +269,7 @@ void mpu6050_get_conv_data(uint8_t mpu_addr, double *axg, double *ayg, double *a
 
 
 /* Update quaternion */
-void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn) {
+void mpu6050_update_quaternion(mpu6050_t *mpu6050) {
     int16_t ax = 0;
     int16_t ay = 0;
     int16_t az = 0;
@@ -290,13 +290,13 @@ void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn) {
 
     /* Get raw data */
     while (1) {
-        mpu6050_read_bit(mpu_addr, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_DATA_RDY_BIT, (uint8_t *) buffer);
+        mpu6050_read_bit(mpu6050, MPU6050_RA_INT_STATUS, MPU6050_INTERRUPT_DATA_RDY_BIT, (uint8_t *) buffer);
         if (buffer[0])
             break;
         _delay_us(10);
     }
 
-    mpu6050_read_bytes(mpu_addr, MPU6050_RA_ACCEL_XOUT_H, 14, (uint8_t *) buffer);
+    mpu6050_read_bytes(mpu6050, MPU6050_RA_ACCEL_XOUT_H, 14, (uint8_t *) buffer);
 
     ax = (((int16_t) buffer[0]) << 8) | buffer[1];
     ay = (((int16_t) buffer[2]) << 8) | buffer[3];
@@ -325,10 +325,10 @@ void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn) {
 
     /* Compute data */
 #if MPU6050_GETATTITUDE == 1
-    mpu6050_mahony_update(qn, gxrs, gyrs, gzrs, axg, ayg, azg);
+    mpu6050_mahony_update(mpu6050, gxrs, gyrs, gzrs, axg, ayg, azg);
 #endif
 #if MPU6050_GETATTITUDE == 2
-    mpu6050_madgwick_update(qn, gxrs, gyrs, gzrs, axg, ayg, azg);
+    mpu6050_madgwick_update(mpu6050, gxrs, gyrs, gzrs, axg, ayg, azg);
 #endif
 }
 
@@ -339,7 +339,7 @@ void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn) {
 #define MPU6050_MAHONY_TWO_KI_DEF	(2.0f * 0.0f)   /* 2 * integral gain */
 
 /* IMU algorithm update */
-void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
+void mpu6050_mahony_update(mpu6050_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
 
     volatile float twoKp = MPU6050_MAHONY_TWO_KP_DEF;        /* 2 * proportional gain (Kp) */
     volatile float twoKi = MPU6050_MAHONY_TWO_KI_DEF;        /* 2 * integral gain (Ki) */
@@ -416,7 +416,7 @@ void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float
 #define MPU6050_MADGWIK_BETA_DEF	0.1f    /* 2 * proportional gain */
 
 /* IMU algorithm update */
-void mpu6050_madgwick_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
+void mpu6050_madgwick_update(mpu6050_t *qn, float gx, float gy, float gz, float ax, float ay, float az) {
 
     float beta = MPU6050_MADGWIK_BETA_DEF; /* 2 * proportional gain (Kp) */
 
@@ -507,7 +507,7 @@ float inv_sqrt(float x) {
  * 3. Rotate around sensor X plane by roll
  */
 
-void mpu6050_get_roll_pitch_yaw(quaternion_t *qn, double *roll, double *pitch, double *yaw) {
+void mpu6050_get_roll_pitch_yaw(mpu6050_t *qn, double *roll, double *pitch, double *yaw) {
     /* roll (x-axis rotation) */
     double sinr = 2.0 * (qn->q0 * qn->q1 + qn->q2 * qn->q3);
     double cosr = 1.0 - 2.0 * (qn->q1 * qn->q1 + qn->q2 * qn->q2);

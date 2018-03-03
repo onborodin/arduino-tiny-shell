@@ -433,6 +433,7 @@
 #endif
 
 typedef struct quaternion {
+    uint8_t addr;
     float q0;
     float q1;
     float q2;
@@ -442,37 +443,37 @@ typedef struct quaternion {
     float integralFBy;
     float integralFBz;
 #endif
-} quaternion_t;
+} mpu6050_t;
 
 /* Functions */
-void mpu6050_init(uint8_t mpu_addr);
-uint8_t mpu6050_test_connection(uint8_t mpu_addr);
+void mpu6050_init(mpu6050_t * mpu6050);
+uint8_t mpu6050_test_connection(mpu6050_t * mpu6050);
 
-void mpu6050_get_raw_data(uint8_t mpu_addr, int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz);
-void mpu6050_get_conv_data(uint8_t mpu_addr, double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds);
+void mpu6050_get_raw_data(mpu6050_t * mpu6050, int16_t * ax, int16_t * ay, int16_t * az, int16_t * gx, int16_t * gy, int16_t * gz);
+void mpu6050_get_conv_data(mpu6050_t * mpu6050, double *axg, double *ayg, double *azg, double *gxds, double *gyds, double *gzds);
 
-void mpu6050_set_sleep_disabled(uint8_t mpu_addr);
-void mpu6050_set_sleep_enabled(uint8_t mpu_addr);
+void mpu6050_set_sleep_disabled(mpu6050_t * mpu6050);
+void mpu6050_set_sleep_enabled(mpu6050_t * mpu6050);
 
-int8_t mpu6050_read_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data);
-int8_t mpu6050_read_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t * data);
-void mpu6050_write_bytes(uint8_t mpu_addr, uint8_t reg_addr, uint8_t length, uint8_t * data);
-void mpu6050_write_byte(uint8_t mpu_addr, uint8_t reg_addr, uint8_t data);
-int8_t mpu6050_read_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data);
-int8_t mpu6050_read_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
-void mpu6050_write_bits(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
-void mpu6050_write_bit(uint8_t mpu_addr, uint8_t reg_addr, uint8_t bit_num, uint8_t data);
+int8_t mpu6050_read_bytes(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t length, uint8_t * data);
+int8_t mpu6050_read_byte(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t * data);
+void mpu6050_write_bytes(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t length, uint8_t * data);
+void mpu6050_write_byte(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t data);
+int8_t mpu6050_read_bits(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t * data);
+int8_t mpu6050_read_bit(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t bit_num, uint8_t * data);
+void mpu6050_write_bits(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t bit_start, uint8_t length, uint8_t data);
+void mpu6050_write_bit(mpu6050_t * mpu6050, uint8_t reg_addr, uint8_t bit_num, uint8_t data);
 
 float inv_sqrt(float x);
 
-void mpu6050_update_quaternion(uint8_t mpu_addr, quaternion_t *qn);
+void mpu6050_update_quaternion(mpu6050_t *qn);
 #if MPU6050_GETATTITUDE == 1
-void mpu6050_mahony_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
+void mpu6050_mahony_update(mpu6050_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
 #endif
 #if MPU6050_GETATTITUDE == 2
-void mpu6050_madgwick_update(quaternion_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
+void mpu6050_madgwick_update(mpu6050_t *qn, float gx, float gy, float gz, float ax, float ay, float az);
 #endif
 
-void mpu6050_get_roll_pitch_yaw(quaternion_t *qn, double *roll, double *pitch, double *yaw);
+void mpu6050_get_roll_pitch_yaw(mpu6050_t *qn, double *roll, double *pitch, double *yaw);
 
 #endif
