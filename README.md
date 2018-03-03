@@ -34,14 +34,16 @@ The argument delimiter is a space, the command terminator is a semicolon `;`.
 - MD5 code for authentification procedures from https://git.cryptolib.org/arm-crypto-lib.git
 - initial driver for RTC DS1307 over I2C
 - sample of I2C slave register machine
-- driver for MPU6050 IMU with Sebastian Madgwick and Robert Mahony algorithms http://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
+- driver for MPU6050 IMU/gyroscope, with Sebastian Madgwick and Robert Mahony algorithms http://x-io.co.uk/open-source-imu-and-ahrs-algorithms/
 - some other (SPI, ADC basic sample, etc)
 
 ## Arduino screen
 
 ![](http://wiki.unix7.org/_media/c/screenshot-2018-02-12-09-58-27.png)
 
+## Two MPU6050 gyroscope
 
+![](https://wiki.unix7.org/_media/c/img_20180303_104707.jpg?w=680&tok=f11792)
 
 
 
