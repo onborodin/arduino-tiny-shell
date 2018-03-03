@@ -43,7 +43,7 @@ The argument delimiter is a space, the command terminator is a semicolon `;`.
 
 ## Two MPU6050 gyroscope
 
-![](https://wiki.unix7.org/_media/c/img_20180303_104707.jpg?w=680&tok=f11792)
+![](https://wiki.unix7.org/_media/c/img_20180303_104707_740.jpg)
 
 
 
