@@ -1,8 +1,7 @@
 
+# Microcontroller tiny shell
 
-# Arduino tiny shell
-
-Here I present sample arduino micro-application with
+Here I present sample microcontroller application with
 - ring buffer for input and output with hook to interrupts (wide shared ring buffer code with my adaptation and inmprovement)
 - extensible tiny sheel for command execution
 - some data manipulation function
